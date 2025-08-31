@@ -29,9 +29,6 @@ client.on('messageCreate', async (message) => {
     const heroName = hero ? hero.name : `Unknown Hero (${buildData.hero_id})`;
     const heroImage = hero?.images?.icon_image_small || null;
 
-    console.log("Hero object:", hero);       // <-- log the full hero object
-    console.log("Hero image URL:", heroImage); // <-- should log the PNG URL
-
     // Fetch upgrades/items
     const upgradesRes = await axios.get('https://assets.deadlock-api.com/v2/items/by-type/upgrade');
     const upgrades = upgradesRes.data;
@@ -50,7 +47,7 @@ client.on('messageCreate', async (message) => {
     const categoryNames = Object.keys(categories);
     if (categoryNames.length === 0) return message.reply('No items found.');
 
-    // 5️⃣ Create embeds per category
+    // Create embeds per category
     const embeds = categoryNames.map(name => {
       const embed = new EmbedBuilder()
         .setTitle(`Character: ${heroName}`)
