@@ -2,6 +2,7 @@
 node_modules/
 .env
 Stuff.txt
+test.js
 
 # Logs
 npm-debug.log*
