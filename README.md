@@ -12,14 +12,14 @@
 
 ## Commands
 
-### `!build <buildId>`
+### `/build <buildId>`
 
 Fetch and display a build with its hero and items.
 
 **Example:**
 
 ```
-!build 302546
+/build 302546
 ```
 
 The bot will respond with an embed including:
@@ -37,7 +37,7 @@ Fetch and display detailed statistics for a specific hero.
 **Example:**
 
 ```
-!hero Infernus
+/hero Infernus
 ```
 
 **Stats displayed:**
@@ -59,12 +59,12 @@ Here’s how **Botlock** looks in action:
 Command:
 
 ```
-!build 302546
+/build [build number]
 ```
 
 **Result:**
 
-<img width="621" height="619" alt="Screenshot 2025-08-31 162956" src="https://github.com/user-attachments/assets/1fde16ac-e732-4ec4-b08f-8bed85483eca" />
+![Discord_54gItyY43J](https://github.com/user-attachments/assets/f01d627d-7166-46ef-9206-639fc698f0a6)
 
 *Embed showing hero, build name, version, and items grouped by category.*
 
@@ -73,12 +73,12 @@ Command:
 Command:
 
 ```
-!hero Victor
+/hero [hero name]
 ```
 
 **Result:**
 
-<img width="558" height="282" alt="image" src="https://github.com/user-attachments/assets/e74f6d46-0e43-4b0f-a2cd-c3fc9c15f96d" />
+![Discord_acSPWaZyfa](https://github.com/user-attachments/assets/580d3b56-291e-444e-a770-6c8026ec8364)
 
 *Embed showing hero and their stats.*
 
