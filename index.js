@@ -1,30 +1,69 @@
-import { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } from 'discord.js';
 import axios from 'axios';
+import { readFileSync } from 'fs';
 import 'dotenv/config';
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const token = process.env.BOT_TOKEN;
 
-client.once('ready', () => console.log(`Logged in as ${client.user.tag}`));
+// ----------------------
+// Read lines from file
+// ----------------------
+const lines = readFileSync('lines.txt', 'utf-8')
+  .split('\n')
+  .filter(line => line.trim() !== '');
+
+function getRandomLine() {
+  return lines[Math.floor(Math.random() * lines.length)];
+}
 
 // ----------------------
-// !build command
+// Register Slash Commands
 // ----------------------
-client.on('messageCreate', async (message) => {
-  if (message.author.bot) return;
+client.once('ready', async () => {
+  console.log(`Logged in as ${client.user.tag}`);
 
-  // ----------------- !build -----------------
-  if (message.content.startsWith('!build')) {
-    const args = message.content.split(' ');
-    const buildId = args[1];
-    if (!buildId) return message.reply('Please provide a build ID: `!build 302546`');
+  const commands = [
+    new SlashCommandBuilder()
+      .setName('build')
+      .setDescription('Get a hero build')
+      .addStringOption(option =>
+        option.setName('id')
+          .setDescription('Build ID')
+          .setRequired(true)
+      ),
+    new SlashCommandBuilder()
+      .setName('hero')
+      .setDescription('Get hero stats')
+      .addStringOption(option =>
+        option.setName('name')
+          .setDescription('Hero Name')
+          .setRequired(true)
+      ),
+  ].map(cmd => cmd.toJSON());
+
+  await client.application.commands.set(commands);
+  console.log('Slash commands registered.');
+});
+
+// ----------------------
+// Handle Interactions
+// ----------------------
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isCommand()) return;
+
+  const { commandName } = interaction;
+
+  // ----------------- /build -----------------
+  if (commandName === 'build') {
+    const buildId = interaction.options.getString('id');
 
     try {
       const buildRes = await axios.get('https://api.deadlock-api.com/v1/builds', {
         params: { build_id: buildId, only_latest: true },
       });
       const buildData = buildRes.data[0]?.hero_build;
-      if (!buildData) return message.reply('Build not found.');
+      if (!buildData) return interaction.reply('Build not found.');
 
       const heroesRes = await axios.get('https://assets.deadlock-api.com/v2/heroes');
       const heroes = heroesRes.data;
@@ -46,7 +85,7 @@ client.on('messageCreate', async (message) => {
       }
 
       const categoryNames = Object.keys(categories);
-      if (categoryNames.length === 0) return message.reply('No items found.');
+      if (categoryNames.length === 0) return interaction.reply('No items found.');
 
       const embeds = categoryNames.map(name => {
         const embed = new EmbedBuilder()
@@ -60,7 +99,6 @@ client.on('messageCreate', async (message) => {
           .setFooter({ text: `Build ID: ${buildData.hero_build_id}` });
 
         if (heroImage) embed.setThumbnail(heroImage);
-
         return embed;
       });
 
@@ -70,12 +108,13 @@ client.on('messageCreate', async (message) => {
         new ButtonBuilder().setCustomId('next').setLabel('Next ➡️').setStyle(ButtonStyle.Primary)
       );
 
-      const msg = await message.reply({ embeds: [embeds[page]], components: [row] });
+      await interaction.reply({ content: getRandomLine(), embeds: [embeds[page]], components: [row], fetchReply: true });
 
-      const collector = msg.createMessageComponentCollector({ time: 60000 });
+      const replyMessage = await interaction.fetchReply();
+      const collector = replyMessage.createMessageComponentCollector({ time: 60000 });
 
       collector.on('collect', i => {
-        if (i.user.id !== message.author.id) return i.reply({ content: "These buttons aren't for you!", ephemeral: true });
+        if (i.user.id !== interaction.user.id) return i.reply({ content: "These buttons aren't for you!", ephemeral: true });
 
         if (i.customId === 'next') page = (page + 1) % embeds.length;
         if (i.customId === 'prev') page = (page - 1 + embeds.length) % embeds.length;
@@ -85,62 +124,33 @@ client.on('messageCreate', async (message) => {
 
     } catch (err) {
       console.error(err);
-      message.reply('Failed to fetch build data.');
+      interaction.reply('Failed to fetch build data.');
     }
   }
 
-  // ----------------- !hero -----------------
-  if (message.content.startsWith('!hero')) {
-    const args = message.content.split(' ');
-    const heroNameInput = args.slice(1).join(' ');
-    if (!heroNameInput) return message.reply('Please provide a hero name: `!hero Infernus`');
+  // ----------------- /hero -----------------
+  if (commandName === 'hero') {
+    const heroNameInput = interaction.options.getString('name');
 
     try {
-      console.log(`[HERO CMD] User requested hero: ${heroNameInput}`);
-
-      // Fetch heroes and find matching one
       const heroesRes = await axios.get('https://assets.deadlock-api.com/v2/heroes');
       const heroes = heroesRes.data;
       const hero = heroes.find(h => h.name.toLowerCase() === heroNameInput.toLowerCase());
+      if (!hero) return interaction.reply(`Hero **${heroNameInput}** not found.`);
 
-      if (!hero) {
-        console.log(`[HERO CMD] No hero found for: ${heroNameInput}`);
-        return message.reply(`Hero **${heroNameInput}** not found.`);
-      }
-
-      console.log(`[HERO CMD] Matched hero: ${hero.name} (ID: ${hero.id})`);
-
-      // Fetch all hero stats
-      const statsUrl = 'https://api.deadlock-api.com/v1/analytics/hero-stats';
-      console.log(`[HERO CMD] Fetching stats from: ${statsUrl}`);
-
-      const statsRes = await axios.get(statsUrl);
+      const statsRes = await axios.get('https://api.deadlock-api.com/v1/analytics/hero-stats');
       const allStats = statsRes.data;
 
-      // Total matches across all heroes
       const totalMatches = allStats.reduce((sum, s) => sum + (s.matches || 0), 0);
-
-      // Find this hero's stats
       const stats = allStats.find(s => s.hero_id === hero.id);
-      if (!stats) {
-        console.log(`[HERO CMD] No stats found for hero ${hero.id}`);
-        return message.reply(`No stats found for **${hero.name}**.`);
-      }
+      if (!stats) return interaction.reply(`No stats found for **${hero.name}**.`);
 
-      console.log(`[HERO CMD] Found stats for ${hero.name}:`, stats);
-
-      // Calculate derived metrics
       const pickRate = totalMatches > 0 ? (stats.matches / totalMatches) * 100 : 0;
       const winRate = stats.matches ? (stats.wins / stats.matches) * 100 : 0;
       const avgKills = stats.matches ? stats.total_kills / stats.matches : 0;
       const avgDeaths = stats.matches ? stats.total_deaths / stats.matches : 0;
       const avgAssists = stats.matches ? stats.total_assists / stats.matches : 0;
-      const avgGPM = stats.matches ? stats.total_net_worth / stats.matches / 30 : 0; // assuming 30 min avg match
-
-      // Souls per minute (SPM) assuming ~45 min average match length
-      const avgSPM = stats.matches 
-        ? stats.total_net_worth / (stats.matches * 45) 
-        : 0;
+      const avgSPM = stats.matches ? stats.total_net_worth / (stats.matches * 45) : 0;
 
       const embed = new EmbedBuilder()
         .setTitle(`📊 Stats for ${hero.name}`)
@@ -156,11 +166,11 @@ client.on('messageCreate', async (message) => {
         .setColor(0x3498db)
         .setFooter({ text: `Hero ID: ${hero.id}` });
 
-      message.reply({ embeds: [embed] });
+      await interaction.reply({ content: getRandomLine(), embeds: [embed] });
 
     } catch (err) {
       console.error('[HERO CMD] Error fetching hero stats:', err.response?.data || err.message || err);
-      message.reply('Failed to fetch hero stats.');
+      interaction.reply('Failed to fetch hero stats.');
     }
   }
 });
