@@ -30,6 +30,24 @@ The bot will respond with an embed including:
 * Item Group(s) with items, cost, and tier
 * An image of the character
 
+### `!hero <heroName>
+
+Fetch and display detailed statistics for a specific hero.
+
+**Example:**
+
+```
+!hero Infernus
+```
+
+**Stats displayed:**
+
+* Pick Rate – Percentage of matches the hero is picked in.
+* Win Rate – Percentage of matches the hero wins.
+* Avg Kills / Deaths / Assists – Average per match.
+* Avg Souls Per Minute – Derived from total souls across matches.
+* Includes hero image in the embed.
+
 ---
 
 ## Usage / Screenshots
@@ -49,6 +67,19 @@ Command:
 <img width="621" height="619" alt="Screenshot 2025-08-31 162956" src="https://github.com/user-attachments/assets/1fde16ac-e732-4ec4-b08f-8bed85483eca" />
 
 *Embed showing hero, build name, version, and items grouped by category.*
+
+### Look up Hero Stats
+
+Command:
+
+```
+!hero Victor
+```
+
+**Result:**
+<img width="558" height="282" alt="image" src="https://github.com/user-attachments/assets/e74f6d46-0e43-4b0f-a2cd-c3fc9c15f96d" />
+
+*Embed showing hero and their stats.**
 
 ---
 
@@ -103,4 +134,5 @@ Feel free to fork the repository, make improvements, and submit pull requests.
 MIT License © Hadi Nasser
 
 ---
+
 
