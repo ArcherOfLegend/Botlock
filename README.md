@@ -77,6 +77,7 @@ Command:
 ```
 
 **Result:**
+
 <img width="558" height="282" alt="image" src="https://github.com/user-attachments/assets/e74f6d46-0e43-4b0f-a2cd-c3fc9c15f96d" />
 
 *Embed showing hero and their stats.*
