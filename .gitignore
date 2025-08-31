@@ -1,0 +1,9 @@
+# Node.js
+node_modules/
+.env
+Stuff.txt
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
