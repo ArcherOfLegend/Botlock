@@ -1,15 +1,15 @@
----
-
 # Botlock
 
-**Botlock** is a Discord bot that interacts with Deadlock API to do a myriad of things.
+**Botlock** is a Discord bot that interacts with the Deadlock API to fetch hero builds, display detailed items, and more.
+
 ## Features
 
 * Fetches hero builds by ID from the Deadlock API.
 * Displays build name, version, and associated hero.
 * Shows detailed items for the build, grouped by category.
 * Includes item cost and tier.
-  
+* Displays an image of the hero.
+
 ## Commands
 
 ### `!build <buildId>`
@@ -19,7 +19,7 @@ Fetch and display a build with its hero and items.
 **Example:**
 
 ```
-!build [BUILDIDNUMBER]
+!build 302546
 ```
 
 The bot will respond with an embed including:
@@ -28,7 +28,29 @@ The bot will respond with an embed including:
 * Build Name
 * Build Version
 * Item Group(s) with items, cost, and tier
-* An image of the Character
+* An image of the character
+
+---
+
+## Usage / Screenshots
+
+Here’s how **Botlock** looks in action:
+
+### Fetch a Build
+
+Command:
+
+```
+!build 302546
+```
+
+**Result:**
+
+<img width="621" height="619" alt="Screenshot 2025-08-31 162956" src="https://github.com/user-attachments/assets/1fde16ac-e732-4ec4-b08f-8bed85483eca" />
+
+*Embed showing hero, build name, version, and items grouped by category.*
+
+---
 
 ## Setup
 
@@ -45,7 +67,7 @@ cd Botlock
 npm install
 ```
 
-3. **Create a `.env` file** with your Discord bot token and Client ID:
+3. **Create a `.env` file** with your Discord bot token and client ID:
 
 ```
 BOT_TOKEN=YOUR_DISCORD_BOT_TOKEN_HERE
@@ -81,3 +103,4 @@ Feel free to fork the repository, make improvements, and submit pull requests.
 MIT License © Hadi Nasser
 
 ---
+
