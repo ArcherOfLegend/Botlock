@@ -30,7 +30,7 @@ The bot will respond with an embed including:
 * Item Group(s) with items, cost, and tier
 * An image of the character
 
-### `!hero <heroName>
+### `!hero <heroName>`
 
 Fetch and display detailed statistics for a specific hero.
 
