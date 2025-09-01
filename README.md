@@ -1,25 +1,23 @@
 # Botlock
 
-**Botlock** is a Discord bot that interacts with the Deadlock API to fetch hero builds, display detailed items, and more.
+**Botlock** is a Discord bot that interacts with the Deadlock API to fetch character builds, display detailed items, and more.
 
 ## Features
 
-* Fetches hero builds by ID from the Deadlock API.
-* Displays build name, version, and associated hero.
-* Shows detailed items for the build, grouped by category.
-* Includes item cost and tier.
-* Displays an image of the hero.
+* Fetches character builds by ID from the Deadlock API.
+* Shows detailed item descriptions.
+* Preview average character stats.
 
 ## Commands
 
-### `!build <buildId>`
+### `/build <buildId>`
 
-Fetch and display a build with its hero and items.
+Fetch and display a build with its character and items.
 
 **Example:**
 
 ```
-!build 302546
+/build 302546
 ```
 
 The bot will respond with an embed including:
@@ -29,6 +27,45 @@ The bot will respond with an embed including:
 * Build Version
 * Item Group(s) with items, cost, and tier
 * An image of the character
+
+### `/hero <heroName>`
+
+Fetch and display detailed statistics for a specific character.
+
+**Example:**
+
+```
+/hero Infernus
+```
+
+**Stats displayed:**
+
+* Pick Rate – Percentage of matches the character is picked in.
+* Win Rate – Percentage of matches the character wins.
+* Avg Kills / Deaths / Assists – Average per match.
+* Avg Souls Per Minute – Derived from total souls across matches.
+* Includes character image in the embed.
+
+### `/item <itemName>`
+
+Fetch and display an item's information.
+
+**Example:**
+
+```
+/item Cold Front
+```
+
+**Info Shown:**
+
+* Item name
+* Cost
+* Description
+* Type
+* Activation
+* Base Stats
+* Item-Specific Passive Stats
+* Item-Specific Active Stats
 
 ---
 
@@ -41,14 +78,40 @@ Here’s how **Botlock** looks in action:
 Command:
 
 ```
-!build 302546
+/build [build number]
 ```
 
 **Result:**
 
-<img width="621" height="619" alt="Screenshot 2025-08-31 162956" src="https://github.com/user-attachments/assets/1fde16ac-e732-4ec4-b08f-8bed85483eca" />
+![Discord_oF7D7WchHe](https://github.com/user-attachments/assets/97bc940d-4a0b-4e3a-abba-1a77648ebc20)
 
-*Embed showing hero, build name, version, and items grouped by category.*
+*Embed showing character, build name, version, and items grouped by category.*
+
+### Look up Character Stats
+
+Command:
+
+```
+/hero [hero name]
+```
+
+**Result:**
+
+![Discord_WFCIKM6Vo4](https://github.com/user-attachments/assets/92548863-2cdd-4663-b235-180067345939)
+
+*Embed showing character and their stats.*
+
+Command:
+
+```
+/item [item name]
+```
+
+**Result:**
+
+![Discord_ekoojtOoaU](https://github.com/user-attachments/assets/71c85037-91e7-4f4c-926a-fcf431825521)
+
+*Embed showing item name, cost, activiation, etc.*
 
 ---
 
@@ -103,4 +166,5 @@ Feel free to fork the repository, make improvements, and submit pull requests.
 MIT License © Hadi Nasser
 
 ---
+
 
