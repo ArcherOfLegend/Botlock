@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } from 'discord.js';
+import { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ActivityType ,ButtonStyle, SlashCommandBuilder } from 'discord.js';
 import axios from 'axios';
 import { readFileSync } from 'fs';
 import 'dotenv/config';
@@ -24,6 +24,15 @@ function getRandomLine() {
 // ----------------------
 client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
+
+  // Set custom activity
+  client.user.setActivity('Reading about the Knickerbockers!', {
+    type: ActivityType.Custom
+  });
+
+  client.user.setPresence({
+    status: 'online', // online, idle, dnd, invisible
+  });
 
   const commands = [
     new SlashCommandBuilder()
