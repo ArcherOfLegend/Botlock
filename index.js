@@ -2,6 +2,8 @@ import { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilde
 import axios from 'axios';
 import { readFileSync } from 'fs';
 import 'dotenv/config';
+import { buildItemEmbed } from "./itemembed.js"; // path to parser
+
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const token = process.env.BOT_TOKEN;
@@ -38,6 +40,14 @@ client.once('ready', async () => {
       .addStringOption(option =>
         option.setName('name')
           .setDescription('Hero Name')
+          .setRequired(true)
+      ),
+    new SlashCommandBuilder()
+      .setName('item')
+      .setDescription('Get item info')
+      .addStringOption(option =>
+        option.setName('name')
+          .setDescription('Item Name')
           .setRequired(true)
       ),
   ].map(cmd => cmd.toJSON());
@@ -172,6 +182,24 @@ client.on('interactionCreate', async (interaction) => {
       console.error('[HERO CMD] Error fetching hero stats:', err.response?.data || err.message || err);
       interaction.reply('Failed to fetch hero stats.');
     }
+  }
+  // ----------------- /item -----------------
+  if (interaction.commandName === "item") {
+    const itemName = interaction.options.getString("name");
+
+    const upgradesRes = await axios.get("https://assets.deadlock-api.com/v2/items/by-type/upgrade");
+    const upgrades = upgradesRes.data;
+
+    const item = upgrades.find(
+      (u) => u.name.toLowerCase() === itemName.toLowerCase()
+    );
+
+    if (!item) {
+      return interaction.reply({ content: "Item not found!", ephemeral: true });
+    }
+
+    const embed = buildItemEmbed(item);
+    await interaction.reply({ content: getRandomLine(), embeds: [embed] });
   }
 });
 
