@@ -67,6 +67,7 @@ Fetch and display an item's information.
 * Item-Specific Passive Stats
 * Item-Specific Active Stats
 
+
 ---
 
 ## Usage / Screenshots
