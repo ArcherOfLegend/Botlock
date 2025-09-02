@@ -62,6 +62,7 @@ client.once('ready', async () => {
     new SlashCommandBuilder()
       .setName('help')
       .setDescription('Show a list of all available commands'),
+      
   ].map(cmd => cmd.toJSON());
 
   await client.application.commands.set(commands);
@@ -78,19 +79,20 @@ client.on('interactionCreate', async (interaction) => {
 
   // ----------------- /help -----------------
   if (commandName === 'help') {
-    const helpEmbed = new EmbedBuilder()
-      .setTitle('📖 Bot Commands')
-      .setDescription('Here are all the available commands:')
+    const embed = new EmbedBuilder()
+      .setTitle('Bot Commands')
+      .setDescription('Here are the available commands:')
       .addFields(
-        { name: '/build <id>', value: 'Get a hero build by ID', inline: false },
-        { name: '/hero <name>', value: 'Get stats for a specific hero', inline: false },
-        { name: '/item <name>', value: 'Get item information', inline: false },
+        { name: '/build <id>', value: 'Get a hero build by Build ID', inline: false },
+        { name: '/hero <name>', value: 'Get hero stats by Hero Name', inline: false },
+        { name: '/item <name>', value: 'Get item info by Item Name', inline: false },
         { name: '/help', value: 'Show this help menu', inline: false }
       )
-      .setColor(0xffcc00)
+      .setColor(0xf1c40f)
       .setFooter({ text: 'Use a command by typing / followed by its name!' });
 
-    return interaction.reply({ content: getRandomLine(), embeds: [helpEmbed], ephemeral: true });
+    await interaction.reply({ content: getRandomLine(), embeds: [embed] });
+    return;
   }
 
   // ----------------- /build -----------------
