@@ -59,6 +59,9 @@ client.once('ready', async () => {
           .setDescription('Item Name')
           .setRequired(true)
       ),
+    new SlashCommandBuilder()
+      .setName('help')
+      .setDescription('Show a list of all available commands'),
   ].map(cmd => cmd.toJSON());
 
   await client.application.commands.set(commands);
@@ -72,6 +75,23 @@ client.on('interactionCreate', async (interaction) => {
   if (!interaction.isCommand()) return;
 
   const { commandName } = interaction;
+
+  // ----------------- /help -----------------
+  if (commandName === 'help') {
+    const helpEmbed = new EmbedBuilder()
+      .setTitle('📖 Bot Commands')
+      .setDescription('Here are all the available commands:')
+      .addFields(
+        { name: '/build <id>', value: 'Get a hero build by ID', inline: false },
+        { name: '/hero <name>', value: 'Get stats for a specific hero', inline: false },
+        { name: '/item <name>', value: 'Get item information', inline: false },
+        { name: '/help', value: 'Show this help menu', inline: false }
+      )
+      .setColor(0xffcc00)
+      .setFooter({ text: 'Use a command by typing / followed by its name!' });
+
+    return interaction.reply({ embeds: [helpEmbed], ephemeral: true });
+  }
 
   // ----------------- /build -----------------
   if (commandName === 'build') {
