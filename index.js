@@ -59,19 +59,9 @@ client.once('ready', async () => {
           .setDescription('Item Name')
           .setRequired(true)
       ),
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
     new SlashCommandBuilder()
       .setName('help')
       .setDescription('Show a list of all available commands'),
-      
-=======
->>>>>>> parent of 61b79cc (Added /help command)
-=======
->>>>>>> parent of 61b79cc (Added /help command)
-=======
->>>>>>> parent of 61b79cc (Added /help command)
   ].map(cmd => cmd.toJSON());
 
   await client.application.commands.set(commands);
@@ -86,33 +76,23 @@ client.on('interactionCreate', async (interaction) => {
 
   const { commandName } = interaction;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
   // ----------------- /help -----------------
   if (commandName === 'help') {
-    const embed = new EmbedBuilder()
-      .setTitle('Bot Commands')
-      .setDescription('Here are the available commands:')
+    const helpEmbed = new EmbedBuilder()
+      .setTitle('📖 Bot Commands')
+      .setDescription('Here are all the available commands:')
       .addFields(
-        { name: '/build <id>', value: 'Get a hero build by Build ID', inline: false },
-        { name: '/hero <name>', value: 'Get hero stats by Hero Name', inline: false },
-        { name: '/item <name>', value: 'Get item info by Item Name', inline: false },
+        { name: '/build <id>', value: 'Get a hero build by ID', inline: false },
+        { name: '/hero <name>', value: 'Get stats for a specific hero', inline: false },
+        { name: '/item <name>', value: 'Get item information', inline: false },
         { name: '/help', value: 'Show this help menu', inline: false }
       )
-      .setColor(0xf1c40f)
+      .setColor(0xffcc00)
       .setFooter({ text: 'Use a command by typing / followed by its name!' });
 
-    await interaction.reply({ content: getRandomLine(), embeds: [embed] });
-    return;
+    return interaction.reply({ embeds: [helpEmbed], ephemeral: true });
   }
 
-=======
->>>>>>> parent of 61b79cc (Added /help command)
-=======
->>>>>>> parent of 61b79cc (Added /help command)
-=======
->>>>>>> parent of 61b79cc (Added /help command)
   // ----------------- /build -----------------
   if (commandName === 'build') {
     const buildId = interaction.options.getString('id');
