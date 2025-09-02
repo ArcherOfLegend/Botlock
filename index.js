@@ -60,10 +60,13 @@ client.once('ready', async () => {
           .setRequired(true)
       ),
 <<<<<<< HEAD
+<<<<<<< HEAD
     new SlashCommandBuilder()
       .setName('help')
       .setDescription('Show a list of all available commands'),
       
+=======
+>>>>>>> parent of 61b79cc (Added /help command)
 =======
 >>>>>>> parent of 61b79cc (Added /help command)
   ].map(cmd => cmd.toJSON());
@@ -80,6 +83,7 @@ client.on('interactionCreate', async (interaction) => {
 
   const { commandName } = interaction;
 
+<<<<<<< HEAD
 <<<<<<< HEAD
   // ----------------- /help -----------------
   if (commandName === 'help') {
@@ -99,6 +103,8 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
+=======
+>>>>>>> parent of 61b79cc (Added /help command)
 =======
 >>>>>>> parent of 61b79cc (Added /help command)
   // ----------------- /build -----------------
