@@ -35,6 +35,6 @@ jobs:
       with:
         platforms: linux/amd64
         push: true
-        tags: ghcr.io/archeroflegend/botlock:latest
+        tags: ghcr.io/${{ github.repository }}:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
