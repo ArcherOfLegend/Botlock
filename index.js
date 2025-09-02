@@ -61,10 +61,13 @@ client.once('ready', async () => {
       ),
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     new SlashCommandBuilder()
       .setName('help')
       .setDescription('Show a list of all available commands'),
       
+=======
+>>>>>>> parent of 61b79cc (Added /help command)
 =======
 >>>>>>> parent of 61b79cc (Added /help command)
 =======
@@ -85,6 +88,7 @@ client.on('interactionCreate', async (interaction) => {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   // ----------------- /help -----------------
   if (commandName === 'help') {
     const embed = new EmbedBuilder()
@@ -103,6 +107,8 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
+=======
+>>>>>>> parent of 61b79cc (Added /help command)
 =======
 >>>>>>> parent of 61b79cc (Added /help command)
 =======
