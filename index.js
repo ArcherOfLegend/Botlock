@@ -59,10 +59,13 @@ client.once('ready', async () => {
           .setDescription('Item Name')
           .setRequired(true)
       ),
+<<<<<<< HEAD
     new SlashCommandBuilder()
       .setName('help')
       .setDescription('Show a list of all available commands'),
       
+=======
+>>>>>>> parent of 61b79cc (Added /help command)
   ].map(cmd => cmd.toJSON());
 
   await client.application.commands.set(commands);
@@ -77,6 +80,7 @@ client.on('interactionCreate', async (interaction) => {
 
   const { commandName } = interaction;
 
+<<<<<<< HEAD
   // ----------------- /help -----------------
   if (commandName === 'help') {
     const embed = new EmbedBuilder()
@@ -95,6 +99,8 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
+=======
+>>>>>>> parent of 61b79cc (Added /help command)
   // ----------------- /build -----------------
   if (commandName === 'build') {
     const buildId = interaction.options.getString('id');
