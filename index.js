@@ -90,7 +90,7 @@ client.on('interactionCreate', async (interaction) => {
       .setColor(0xffcc00)
       .setFooter({ text: 'Use a command by typing / followed by its name!' });
 
-    return interaction.reply({ embeds: [helpEmbed], ephemeral: true });
+    return interaction.reply({ content: getRandomLine(), embeds: [helpEmbed], ephemeral: true });
   }
 
   // ----------------- /build -----------------
