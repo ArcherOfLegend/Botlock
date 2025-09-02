@@ -2,6 +2,10 @@
 
 **Botlock** is a Discord bot that interacts with the Deadlock API to fetch character builds, display detailed items, and more.
 
+Get it here!
+
+https://discord.com/api/oauth2/authorize?client_id=1411659538423222334&permissions=0&scope=bot%20applications.commands
+
 ## Features
 
 * Fetches character builds by ID from the Deadlock API.
