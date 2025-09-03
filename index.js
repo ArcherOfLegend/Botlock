@@ -60,6 +60,14 @@ client.once('ready', async () => {
           .setRequired(true)
       ),
     new SlashCommandBuilder()
+      .setName('feedback')
+      .setDescription("Provide some feedback")
+      .addStringOption(option =>
+        option.setName('message')
+        .setDescription('Feedback or Suggestion')
+        .setRequired(true)
+      ),
+    new SlashCommandBuilder()
       .setName('help')
       .setDescription('Show a list of all available commands'),
   ].map(cmd => cmd.toJSON());
@@ -219,7 +227,7 @@ client.on('interactionCreate', async (interaction) => {
     }
   }
   // ----------------- /item -----------------
-  if (interaction.commandName === "item") {
+  if (commandName === "item") {
     const itemName = interaction.options.getString("name");
 
     const upgradesRes = await axios.get("https://assets.deadlock-api.com/v2/items/by-type/upgrade");
@@ -235,6 +243,43 @@ client.on('interactionCreate', async (interaction) => {
 
     const embed = buildItemEmbed(item);
     await interaction.reply({ content: getRandomLine(), embeds: [embed] });
+  }
+
+  // ----------------- /feedback -----------------
+  if (commandName === "feedback") {
+    const feedbackMsg = interaction.options.getString('message');
+
+    try {
+      await interaction.reply ({
+        content: 'Thanks for your feedback! ',
+      });
+      console.log(`[FEEDBACK] From ${interaction.user.tag} (${interaction.user.id}): ${feedbackMsg}`);
+      const owner = await client.users.fetch(process.env.OWNER_ID);
+      if (owner) {
+        owner.send ({
+          embeds: [
+            new EmbedBuilder ()
+            .setTitle('Feedback')
+            .addFields(
+              { name: 'From', value: `${interaction.user.tag} (${interaction.user.id})`, inline: false },
+              { name: 'Feedback', value: feedbackMsg, inline: false }
+            )
+            .setColor(0x9b59b6)
+            .setTimestamp()
+          ]
+        }).catch(err => console.error("Failed to send DM:", err));
+      }
+
+      console.log(`[FEEDBACK] From ${interaction.user.tag} (${interaction.user.id}): ${feedbackMsg}`);
+
+    } catch (err) {
+      console.error('[FEEDBACK CMD] Error:', err);
+      if (interaction.replied || interaction.deferred) {
+        await interaction.editReply('Failed to submit feedback.');
+      } else {
+        await interaction.reply('Failed to submit feedback.');
+      }
+    }
   }
 });
 
