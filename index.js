@@ -99,6 +99,7 @@ client.on('interactionCreate', async (interaction) => {
         { name: '/build <id>', value: 'Get a hero build by ID', inline: false },
         { name: '/hero <name>', value: 'Get stats for a specific hero', inline: false },
         { name: '/item <name>', value: 'Get item information', inline: false },
+        { name: '/feedback <feedback>', value: 'Provide some feedback', inline: false },
         { name: '/help', value: 'Show this help menu', inline: false }
       )
       .setColor(0xffcc00)
