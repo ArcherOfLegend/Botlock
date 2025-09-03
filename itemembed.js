@@ -6,6 +6,13 @@ function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+// Custom emoji map
+const emojiMap = {
+  vitality: "<:vitality:1412785828845060216>",
+  spirit: "<:spirit:1412785868292358225>",
+  weapon: "<:weapon:1412785897983705108>",
+};
+
 export function buildItemEmbed(item) {
   const embed = new EmbedBuilder()
     .setTitle(`${item.name} ($${item.cost})`)
@@ -24,9 +31,13 @@ export function buildItemEmbed(item) {
 
   // Item type
   if (item.item_slot_type) {
+    const typeName = capitalize(item.item_slot_type);
+    const emoji = 
+      emojiMap[item.item_slot_type.toLowerCase()] || "";
+
     embed.addFields({
       name: "Type",
-      value: capitalize(item.item_slot_type),
+      value: `${emoji} ${typeName}`,
       inline: true,
     });
   }
