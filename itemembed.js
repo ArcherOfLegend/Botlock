@@ -35,7 +35,6 @@ export function buildItemEmbed(item) {
   if (item.activation) {
     const activationText = ["instant_cast", "press"].includes(item.activation.toLowerCase())
       ? "Active"
-      // heeadache
       : capitalize(item.activation);
 
     embed.addFields({
