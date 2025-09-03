@@ -2,6 +2,7 @@ import { EmbedBuilder } from "discord.js";
 
 // Capitalize helper
 function capitalize(str) {
+  if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
@@ -38,7 +39,7 @@ export function buildItemEmbed(item) {
 
     embed.addFields({
       name: "Activation",
-      value: capitalize(item.activation),
+      value: activationText,
       inline: true,
     });
   }
