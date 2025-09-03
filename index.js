@@ -66,6 +66,12 @@ client.once('ready', async () => {
 
   await client.application.commands.set(commands);
   console.log('Slash commands registered.');
+
+  // 🛠 Debug: Print servers the bot is in
+  console.log(`The bot is in ${client.guilds.cache.size} servers:`);
+  client.guilds.cache.forEach(guild => {
+    console.log(`- ${guild.name} (${guild.id})`);
+  });
 });
 
 // ----------------------
