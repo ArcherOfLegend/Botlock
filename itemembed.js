@@ -2,6 +2,7 @@ import { EmbedBuilder } from "discord.js";
 
 // Capitalize helper
 function capitalize(str) {
+  if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
@@ -38,7 +39,7 @@ export function buildItemEmbed(item) {
 
     embed.addFields({
       name: "Activation",
-      value: capitalize(item.activation),
+      value: activationText,
       inline: true,
     });
   }
@@ -46,7 +47,7 @@ export function buildItemEmbed(item) {
   // Tooltip sections
   if (item.tooltip_sections?.length) {
     item.tooltip_sections.forEach((section) => {
-      const sectionLabel = capitalize(section.section_type);
+      const sectionLabel = capitalize(section?.section_type);
       const sectionContent = [];
 
       if (section.section_attributes) {
@@ -54,7 +55,7 @@ export function buildItemEmbed(item) {
           // Important properties first (bold)
           if (attr.important_properties?.length) {
             attr.important_properties.forEach((propKey) => {
-              const prop = item.properties[propKey];
+              const prop = item.properties?.[propKey];
               if (prop) {
                 sectionContent.push(
                   `**+${prop.value}${prop.postfix || ""} ${prop.label}**`
@@ -66,7 +67,7 @@ export function buildItemEmbed(item) {
           // Normal properties
           if (attr.properties?.length) {
             attr.properties.forEach((propKey) => {
-              const prop = item.properties[propKey];
+              const prop = item.properties?.[propKey];
               if (prop) {
                 sectionContent.push(
                   `+${prop.value}${prop.postfix || ""} ${prop.label}`
@@ -78,7 +79,7 @@ export function buildItemEmbed(item) {
           // Elevated properties
           if (attr.elevated_properties?.length) {
             attr.elevated_properties.forEach((propKey) => {
-              const prop = item.properties[propKey];
+              const prop = item.properties?.[propKey];
               if (prop) {
                 sectionContent.push(
                   `**+${prop.value}${prop.postfix || ""} ${prop.label}**`
@@ -97,7 +98,7 @@ export function buildItemEmbed(item) {
         });
       }
 
-      if (sectionContent.length) {
+      if (sectionContent.length && sectionLabel) {
         embed.addFields({
           name: sectionLabel,
           value: sectionContent.join("\n"),
