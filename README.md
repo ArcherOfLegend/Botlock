@@ -72,6 +72,10 @@ Fetch and display an item's information.
 * Item-Specific Active Stats
 
 
+### `/feedback <feedback>`
+
+Send feedback to me, the bot developer!
+
 ---
 
 ## Usage / Screenshots
