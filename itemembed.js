@@ -13,13 +13,35 @@ const emojiMap = {
   weapon: "<:weapon:1412785897983705108>",
 };
 
+// Extract description from tooltip sections
+function getDescriptionFromSections(item) {
+  if (!item.tooltip_sections?.length) return "";
+
+  const descriptions = [];
+
+  item.tooltip_sections.forEach((section) => {
+    if (!section.section_attributes) return;
+
+    section.section_attributes.forEach((attr) => {
+      if (attr.loc_string) {
+        const cleanText = attr.loc_string.replace(/<[^>]+>/g, "");
+        if (cleanText.trim()) {
+          descriptions.push(cleanText);
+        }
+      }
+    });
+  });
+
+  return descriptions.join("\n\n"); // put blank line between sections
+}
+
 export function buildItemEmbed(item) {
   const embed = new EmbedBuilder()
     .setTitle(`${item.name} ($${item.cost})`)
     .setThumbnail(item.shop_image)
     .setColor(0xffd700);
 
-  const descriptionText = item.description?.desc?.replace(/<[^>]+>/g, "");
+  const descriptionText = getDescriptionFromSections(item)
 
   // Show general description if available
   if (descriptionText) {
