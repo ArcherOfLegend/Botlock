@@ -55,7 +55,7 @@ export function buildItemEmbed(item) {
           // Important properties first (bold)
           if (attr.important_properties?.length) {
             attr.important_properties.forEach((propKey) => {
-              const prop = item.properties?[propKey];
+              const prop = item.properties?.[propKey];
               if (prop) {
                 sectionContent.push(
                   `**+${prop.value}${prop.postfix || ""} ${prop.label}**`
@@ -67,7 +67,7 @@ export function buildItemEmbed(item) {
           // Normal properties
           if (attr.properties?.length) {
             attr.properties.forEach((propKey) => {
-              const prop = item.properties?[propKey];
+              const prop = item.properties?.[propKey];
               if (prop) {
                 sectionContent.push(
                   `+${prop.value}${prop.postfix || ""} ${prop.label}`
@@ -79,7 +79,7 @@ export function buildItemEmbed(item) {
           // Elevated properties
           if (attr.elevated_properties?.length) {
             attr.elevated_properties.forEach((propKey) => {
-              const prop = item.properties?[propKey];
+              const prop = item.properties?.[propKey];
               if (prop) {
                 sectionContent.push(
                   `**+${prop.value}${prop.postfix || ""} ${prop.label}**`
