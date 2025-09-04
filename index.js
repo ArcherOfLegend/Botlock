@@ -2,7 +2,7 @@ import { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilde
 import axios from 'axios';
 import { readFileSync } from 'fs';
 import 'dotenv/config';
-import { setChannel, getChannel, getAllChannels } from './broadcastStore.js';
+import { setChannel, getChannel, getAllChannels } from './broadcastChannels.js';
 import { buildItemEmbed } from "./itemembed.js"; // path to parser
 
 
