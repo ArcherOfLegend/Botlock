@@ -8,9 +8,9 @@ import { buildItemEmbed } from "./itemembed.js"; // path to parser
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const token = process.env.BOT_TOKEN;
 
-// ----------------------
+
 // Read lines from file
-// ----------------------
+
 const lines = readFileSync('lines.txt', 'utf-8')
   .split('\n')
   .filter(line => line.trim() !== '');
@@ -19,9 +19,9 @@ function getRandomLine() {
   return lines[Math.floor(Math.random() * lines.length)];
 }
 
-// ----------------------
+
 // Register Slash Commands
-// ----------------------
+
 client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
 
@@ -31,7 +31,7 @@ client.once('ready', async () => {
   });
 
   client.user.setPresence({
-    status: 'online', // online, idle, dnd, invisible
+    status: 'online',
   });
 
   const commands = [
@@ -67,6 +67,14 @@ client.once('ready', async () => {
         .setDescription('Feedback or Suggestion')
         .setRequired(true)
       ),
+      new SlashCommandBuilder()
+      .setName('broadcast')
+      .setDescription('Broadcast a message to all servers (Owner only)')
+      .addStringOption(option =>
+        option.setName('message')
+        .setDescription('Message to broadcast')
+        .setRequired(true)
+      ),
     new SlashCommandBuilder()
       .setName('help')
       .setDescription('Show a list of all available commands'),
@@ -75,16 +83,42 @@ client.once('ready', async () => {
   await client.application.commands.set(commands);
   console.log('Slash commands registered.');
 
-  // 🛠 Debug: Print servers the bot is in
+  // Debug: Print servers the bot is in
   console.log(`The bot is in ${client.guilds.cache.size} servers:`);
   client.guilds.cache.forEach(guild => {
     console.log(`- ${guild.name} (${guild.id})`);
   });
 });
 
-// ----------------------
+
+// Broadcast function
+async function broadcastMessage(client, messageText) {
+  for (const [guildId, guild] of client.guilds.cache) {
+    try {
+      // Prefer system channel
+      let channel = guild.systemChannel;
+
+      // If no system channel, pick first text channel the bot can send in
+      if (!channel) {
+        channel = guild.channels.cache.find(
+          c => c.isTextBased() && c.permissionsFor(guild.members.me).has('SendMessages')
+        );
+      }
+
+      if (channel) {
+        await channel.send(messageText);
+        console.log(`Sent message to ${guild.name} (${guild.id})`);
+      } else {
+        console.log(`No valid channel in ${guild.name} (${guild.id})`);
+      }
+    } catch (err) {
+      console.error(`Failed to send message to ${guild.name}:`, err);
+    }
+  }
+}
+
+
 // Handle Interactions
-// ----------------------
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isCommand()) return;
 
@@ -244,6 +278,21 @@ client.on('interactionCreate', async (interaction) => {
 
     const embed = buildItemEmbed(item);
     await interaction.reply({ content: getRandomLine(), embeds: [embed] });
+  }
+
+  // ----------------- /broadcast -----------------
+  if (commandName === "broadcast") {
+    if (interaction.user.id !== process.env.OWNER_ID) {
+      return interaction.reply({ content: "You do not have permission to use this command.", ephemeral: true });
+    }
+
+    const messageText = interaction.options.getString('message');
+
+    await interaction.reply({ content: 'Broadcasting message to all servers...', ephemeral: true });
+
+    await broadcastMessage(client, messageText);
+
+    await interaction.followUp({ content: 'Broadcast completed.', ephemeral: true });
   }
 
   // ----------------- /feedback -----------------
