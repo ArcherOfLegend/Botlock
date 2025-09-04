@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilde
 import axios from 'axios';
 import { readFileSync } from 'fs';
 import 'dotenv/config';
+import { setChannel, getChannel, getAllChannels } from './broadcastStore.js';
 import { buildItemEmbed } from "./itemembed.js"; // path to parser
 
 
@@ -68,6 +69,14 @@ client.once('ready', async () => {
         .setRequired(true)
       ),
       new SlashCommandBuilder()
+      .setName('setbroadcast')
+      .setDescription('Set the broadcast channel for this server (Mod only)')
+      .addChannelOption(option =>
+        option.setName('channel')
+        .setDescription('Channel to set as broadcast channel')
+        .setRequired(true)
+      ),
+      new SlashCommandBuilder()
       .setName('broadcast')
       .setDescription('Broadcast a message to all servers (Owner only)')
       .addStringOption(option =>
@@ -91,14 +100,26 @@ client.once('ready', async () => {
 });
 
 
-// Broadcast function
+// Broadcast function with fallback
 async function broadcastMessage(client, messageText) {
+  const channels = getAllChannels(); // Map of guildId -> channelId
+
   for (const [guildId, guild] of client.guilds.cache) {
     try {
-      // Prefer system channel
-      let channel = guild.systemChannel;
+      let channel = null;
 
-      // If no system channel, pick first text channel the bot can send in
+      // Use saved broadcast channel if available
+      const savedChannelId = channels.get(guildId);
+      if (savedChannelId) {
+        channel = await guild.channels.fetch(savedChannelId).catch(() => null);
+      }
+
+      // Fallback: system channel
+      if (!channel) {
+        channel = guild.systemChannel;
+      }
+
+      // Fallback: first text channel bot can send in
       if (!channel) {
         channel = guild.channels.cache.find(
           c => c.isTextBased() && c.permissionsFor(guild.members.me).has('SendMessages')
@@ -107,12 +128,13 @@ async function broadcastMessage(client, messageText) {
 
       if (channel) {
         await channel.send(messageText);
-        console.log(`Sent message to ${guild.name} (${guild.id})`);
+        console.log(`Broadcast sent to ${guild.name} (#${channel.name})`);
       } else {
         console.log(`No valid channel in ${guild.name} (${guild.id})`);
       }
+
     } catch (err) {
-      console.error(`Failed to send message to ${guild.name}:`, err);
+      console.error(`Failed to broadcast to ${guild.name} (${guild.id}):`, err.message);
     }
   }
 }
@@ -134,6 +156,7 @@ client.on('interactionCreate', async (interaction) => {
         { name: '/hero <name>', value: 'Get stats for a specific hero', inline: false },
         { name: '/item <name>', value: 'Get item information', inline: false },
         { name: '/feedback <feedback>', value: 'Provide some feedback', inline: false },
+        { name: '/setbroadcast <channel>', value: 'Set the broadcast channel for this server (Mod only)', inline: false },
         { name: '/help', value: 'Show this help menu', inline: false }
       )
       .setColor(0xffcc00)
@@ -294,6 +317,35 @@ client.on('interactionCreate', async (interaction) => {
 
     await interaction.followUp({ content: 'Broadcast completed.', ephemeral: true });
   }
+
+  // ----------------- /setbroadcast -----------------
+  if (commandName === 'setbroadcast') {
+  // Check permissions
+  if (!interaction.member.permissions.has('ManageGuild')) {
+    return interaction.reply({
+      content: "You need **Manage Server** permission to set the broadcast channel.",
+      ephemeral: true,
+    });
+  }
+
+  const channel = interaction.options.getChannel('channel');
+
+  // Make sure it's a text channel
+  if (!channel.isTextBased()) {
+    return interaction.reply({
+      content: "Please choose a text-based channel.",
+      ephemeral: true,
+    });
+  }
+
+  // Save it to broadcastStore
+  setChannel(interaction.guild.id, channel.id);
+
+  await interaction.reply({
+    content: `Broadcast channel set to ${channel} for this server.`,
+    ephemeral: true,
+  });
+}
 
   // ----------------- /feedback -----------------
   if (commandName === "feedback") {
