@@ -4,6 +4,7 @@ import { readFileSync } from 'fs';
 import 'dotenv/config';
 import { setChannel, getChannel, getAllChannels } from './broadcastChannels.js';
 import { buildItemEmbed } from "./itemembed.js"; // path to parser
+import * as registerCommand from "./registerCommand.js";
 
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -87,6 +88,7 @@ client.once('ready', async () => {
     new SlashCommandBuilder()
       .setName('help')
       .setDescription('Show a list of all available commands'),
+    registerCommand.data,
   ].map(cmd => cmd.toJSON());
 
   await client.application.commands.set(commands);
@@ -316,6 +318,11 @@ client.on('interactionCreate', async (interaction) => {
     await broadcastMessage(client, messageText);
 
     await interaction.followUp({ content: 'Broadcast completed.', ephemeral: true });
+  }
+
+  // ----------------- /register -----------------
+  if (interaction.commandName === "register") {
+    await registerCommand.execute(interaction);
   }
 
   // ----------------- /setbroadcast -----------------
