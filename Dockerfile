@@ -4,7 +4,7 @@ RUN mkdir -p /usr/src/bot
 WORKDIR /usr/src/bot
 
 COPY package.json /usr/src/bot
-RUN npm install
+RUN npm install express express-session passport passport-steam
 
 COPY . /usr/src/bot
 
