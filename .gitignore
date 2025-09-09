@@ -3,6 +3,7 @@ node_modules/
 .env
 Stuff.txt
 test.js
+broadcastChannels.json
 
 # Logs
 npm-debug.log*
