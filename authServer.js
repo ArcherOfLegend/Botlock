@@ -41,9 +41,9 @@ app.get("/auth/steam/return",
 
     if (discordId) {
       setSteamId(discordId, steamId);
-      res.send("✅ Successfully linked your Steam account! You can return to Discord.");
+      res.send("Successfully linked your Steam account! You can return to Discord.");
     } else {
-      res.send("⚠️ Missing Discord ID, try again.");
+      res.send("Missing Discord ID, try again.");
     }
   }
 );
