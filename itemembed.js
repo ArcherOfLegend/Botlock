@@ -87,15 +87,15 @@ function addTooltipSections(embed, item, descriptionText) {
   }
 }
 
-// Add component / upgrade path
+// Add component / upgrade path safely
 function addComponentItems(embed, item, itemsMap) {
   if (!item.component_items?.length) return;
 
   const componentsText = item.component_items
     .map((className) => {
-      const compItem = itemsMap[className];
-      if (compItem) return compItem.name; // human-readable name
-      return capitalize(className.replace(/_/g, " ")); // fallback
+      const compItem = itemsMap?.[className];
+      if (compItem?.name) return compItem.name; // human-readable name
+      return capitalize(className.replace(/_/g, " ")); // fallback if not found
     })
     .join(", ");
 
@@ -148,7 +148,7 @@ export function buildItemEmbed(item, itemsMap) {
   // Add tooltip sections (stats)
   addTooltipSections(embed, item, descriptionText);
 
-  // Add upgrade path if it exists
+  // Add upgrade path if it exists (safe lookup)
   addComponentItems(embed, item, itemsMap);
 
   return embed;
