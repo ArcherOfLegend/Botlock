@@ -45,12 +45,24 @@ function buildPropertyContent(item, propKeys, isBold = false) {
 
 // Build content for one attribute
 function buildAttributeContent(item, attr, descriptionText) {
-  const parts = [
-    ...buildPropertyContent(item, attr.important_properties, true),
-    ...buildPropertyContent(item, attr.properties, false),
-    ...buildPropertyContent(item, attr.elevated_properties, true),
-  ];
-
+  const lineParts = [];
+  // Important
+  lineParts.push(
+    ...buildPropertyContent(item, attr.important_properties, true)
+  );
+  // Normal
+  lineParts.push(
+    ...buildPropertyContent(item, attr.properties, false)
+  );
+  // Elevated
+  lineParts.push(
+    ...buildPropertyContent(item, attr.elevated_properties, true)
+  );
+  const parts = [];
+  if (lineParts.length) {
+    parts.push(lineParts.join("   "));
+  }
+  // loc_string (skip if identical to descriptionText)
   if (attr.loc_string) {
     const text = attr.loc_string.replace(/<[^>]+>/g, "");
     if (text !== descriptionText) {
@@ -60,6 +72,7 @@ function buildAttributeContent(item, attr, descriptionText) {
 
   return parts;
 }
+
 
 // Add tooltip sections into embed
 function addTooltipSections(embed, item, descriptionText) {
