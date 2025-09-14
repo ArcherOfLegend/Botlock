@@ -87,6 +87,24 @@ function addTooltipSections(embed, item, descriptionText) {
   }
 }
 
+// Add component / upgrade path
+function addComponentItems(embed, item, itemsMap) {
+  if (!item.component_items?.length) return;
+
+  const componentsText = item.component_items
+    .map((className) => {
+      const compItem = itemsMap[className];
+      if (compItem) return compItem.name; // human-readable name
+      return capitalize(className.replace(/_/g, " ")); // fallback
+    })
+    .join(", ");
+
+  embed.addFields({
+    name: "Upgrade Path",
+    value: componentsText,
+  });
+}
+
 // Build the full item embed
 export function buildItemEmbed(item) {
   const embed = new EmbedBuilder()
@@ -129,6 +147,9 @@ export function buildItemEmbed(item) {
 
   // Add tooltip sections (stats)
   addTooltipSections(embed, item, descriptionText);
+
+  // Add upgrade path if it exists
+  addComponentItems(embed, item, itemsMap);
 
   return embed;
 }
