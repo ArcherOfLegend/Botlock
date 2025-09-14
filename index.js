@@ -189,7 +189,8 @@ client.on('interactionCreate', async (interaction) => {
       const abilities = abilitiesRes.data;
 
       const categories = {};
-      // Add mod categories
+
+      // ----- MOD CATEGORIES -----
       for (const category of buildData.details.mod_categories) {
         categories[category.name] = category.mods.map(mod => {
           const upgrade = upgrades.find(u => u.id === mod.ability_id);
@@ -199,16 +200,37 @@ client.on('interactionCreate', async (interaction) => {
         });
       }
 
-      // Add ability order
-      const abilityOrder = buildData.ability_order?.currency_changes?.map(change => {
-        const ability = abilities.find(a => a.id === change.ability_id);
-        return ability
-          ? `**${ability.name}** (Delta: ${change.delta}, Currency: ${change.currency_type})`
-          : `Unknown Ability (${change.ability_id})`;
-      }) || [];
+      // ----- ABILITY ORDER -----
+      if (buildData.details.ability_order?.currency_changes?.length) {
+        const abilitySequence = [];
 
-      if (abilityOrder.length > 0) {
-        categories['Ability Order'] = abilityOrder;
+        for (const change of buildData.details.ability_order.currency_changes) {
+          const ability = abilities.find(a => a.id === change.ability_id);
+          if (!ability) continue;
+
+          const points = Math.abs(change.delta);
+          for (let i = 0; i < points; i++) {
+            abilitySequence.push(ability.name);
+          }
+        }
+
+        // Combine consecutive duplicates for cleaner display
+        const combinedSequence = [];
+        let last = null;
+        let count = 0;
+
+        for (const name of abilitySequence) {
+          if (name === last) {
+            count++;
+          } else {
+            if (last) combinedSequence.push(`**${last}** ×${count}`);
+            last = name;
+            count = 1;
+          }
+        }
+        if (last) combinedSequence.push(`**${last}** ×${count}`);
+
+        categories['Ability Order'] = combinedSequence;
       }
 
       const categoryNames = Object.keys(categories);
@@ -254,6 +276,7 @@ client.on('interactionCreate', async (interaction) => {
       interaction.reply('Failed to fetch build data.');
     }
   }
+
 
   // ----------------- /hero -----------------
   if (commandName === 'hero') {
