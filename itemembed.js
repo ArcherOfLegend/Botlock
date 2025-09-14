@@ -21,8 +21,7 @@ function getDescriptionFromSections(item) {
     .flatMap((section) =>
       section.section_attributes?.map((attr) => {
         if (!attr.loc_string) return null;
-        const cleanText = attr.loc_string.replace(/<[^>]+>/g, "").trim();
-        return cleanText || null;
+        return attr.loc_string.replace(/<[^>]+>/g, "").trim();
       }) || []
     )
     .filter(Boolean)
@@ -37,7 +36,9 @@ function buildPropertyContent(item, propKeys, isBold = false) {
       const prop = item.properties?.[key];
       if (!prop) return null;
 
-      const text = `+${prop.value}${prop.postfix || ""} ${prop.label}`;
+      // Use prefix if provided (e.g., "-" for FireRateSlow)
+      const prefix = prop.prefix?.replace("{s:sign}", "") || "";
+      const text = `${prefix}${prop.value}${prop.postfix || ""} ${prop.label}`;
       return isBold ? `**${text}**` : text;
     })
     .filter(Boolean);
@@ -45,27 +46,15 @@ function buildPropertyContent(item, propKeys, isBold = false) {
 
 // Build content for one attribute
 function buildAttributeContent(item, attr, descriptionText) {
-  const lineParts = [];
-  // Important
-  lineParts.push(
-    ...buildPropertyContent(item, attr.important_properties, true)
-  );
-  // Normal
-  lineParts.push(
-    ...buildPropertyContent(item, attr.properties, false)
-  );
-  // Elevated
-  lineParts.push(
-    ...buildPropertyContent(item, attr.elevated_properties, true)
-  );
-  const parts = [];
-  if (lineParts.length) {
-    parts.push(lineParts.join("   "));
-  }
-  // loc_string (skip if identical to descriptionText)
+  const parts = [
+    ...buildPropertyContent(item, attr.important_properties, true),
+    ...buildPropertyContent(item, attr.properties, false),
+    ...buildPropertyContent(item, attr.elevated_properties, true),
+  ];
+
   if (attr.loc_string) {
-    const text = attr.loc_string.replace(/<[^>]+>/g, "");
-    if (text !== descriptionText) {
+    const text = attr.loc_string.replace(/<[^>]+>/g, "").trim();
+    if (text && text !== descriptionText) {
       parts.push(text);
     }
   }
@@ -73,15 +62,12 @@ function buildAttributeContent(item, attr, descriptionText) {
   return parts;
 }
 
-
 // Add tooltip sections into embed
 function addTooltipSections(embed, item, descriptionText) {
   if (!item.tooltip_sections?.length) return;
 
   for (const section of item.tooltip_sections) {
     const sectionLabel = capitalize(section?.section_type);
-    if (!sectionLabel || !section.section_attributes) continue;
-
     const sectionContent = section.section_attributes
       .map((attr) => buildAttributeContent(item, attr, descriptionText))
       .flat()
@@ -89,25 +75,27 @@ function addTooltipSections(embed, item, descriptionText) {
 
     if (sectionContent.length) {
       embed.addFields({
-        name: sectionLabel,
+        name: sectionLabel || "Stats",
         value: sectionContent.join("\n"),
       });
     }
   }
 }
 
+// Build the full item embed
 export function buildItemEmbed(item) {
   const embed = new EmbedBuilder()
     .setTitle(`${item.name} ($${item.cost})`)
     .setThumbnail(item.shop_image)
     .setColor(0xffd700);
 
+  // Add description
   const descriptionText = getDescriptionFromSections(item);
-
   if (descriptionText) {
     embed.addFields({ name: "Description", value: descriptionText });
   }
 
+  // Add type field
   if (item.item_slot_type) {
     const typeName = capitalize(item.item_slot_type);
     const emoji = emojiMap[item.item_slot_type.toLowerCase()] || "";
@@ -119,6 +107,7 @@ export function buildItemEmbed(item) {
     });
   }
 
+  // Add activation
   if (item.activation) {
     const activationText = ["instant_cast", "press"].includes(
       item.activation.toLowerCase()
@@ -133,6 +122,7 @@ export function buildItemEmbed(item) {
     });
   }
 
+  // Add tooltip sections (stats)
   addTooltipSections(embed, item, descriptionText);
 
   return embed;
