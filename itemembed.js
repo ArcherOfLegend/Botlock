@@ -87,22 +87,24 @@ function addTooltipSections(embed, item, descriptionText) {
   }
 }
 
-// Add component / upgrade path safely
 function addComponentItems(embed, item, itemsMap) {
   if (!item.component_items?.length) return;
 
   const componentsText = item.component_items
     .map((className) => {
-      const compItem = itemsMap?.[className];
+      const compItem = itemsMap[className];
       if (compItem?.name) return compItem.name; // human-readable name
-      return capitalize(className.replace(/_/g, " ")); // fallback if not found
+      return null; // skip if not found
     })
+    .filter(Boolean)
     .join(", ");
 
-  embed.addFields({
-    name: "Upgrade Path",
-    value: componentsText,
-  });
+  if (componentsText) {
+    embed.addFields({
+      name: "Upgrade Path",
+      value: componentsText,
+    });
+  }
 }
 
 // Build the full item embed
