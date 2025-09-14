@@ -203,7 +203,7 @@ client.on('interactionCreate', async (interaction) => {
       // ----- ABILITY ORDER -----
       const currencyChanges = buildData.details.ability_order?.currency_changes || [];
       if (currencyChanges.length) {
-        const abilityCount = {}; // track first unlock per ability
+        const abilitySeen = {}; // track first unlock
         const abilitySequence = [];
 
         for (const change of currencyChanges) {
@@ -213,8 +213,8 @@ client.on('interactionCreate', async (interaction) => {
           const absDelta = Math.abs(change.delta);
 
           // skip first unlock
-          if (!abilityCount[ability.id]) {
-            abilityCount[ability.id] = true;
+          if (!abilitySeen[ability.id]) {
+            abilitySeen[ability.id] = true;
             continue;
           }
 
@@ -228,7 +228,9 @@ client.on('interactionCreate', async (interaction) => {
           abilitySequence.push(`${ability.name} ${tier}`);
         }
 
-        categories['Ability Order'] = abilitySequence;
+        if (abilitySequence.length > 0) {
+          categories['Ability Order'] = abilitySequence;
+        }
       }
 
       const categoryNames = Object.keys(categories);
