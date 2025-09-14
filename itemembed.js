@@ -88,29 +88,15 @@ function addTooltipSections(embed, item, descriptionText) {
 }
 
 // Add component / upgrade path safely using the item's "name" field, with logging
-function addComponentItems(embed, item, itemsMap) {
-  if (!item.component_items?.length) {
-    console.log(`[addComponentItems] No component items for ${item.name}`);
-    return;
-  }
-
-  console.log(`[addComponentItems] Processing component items for ${item.name}:`, item.component_items);
+function addComponentItems(embed, item, allItemsArray) {
+  if (!item.component_items?.length) return;
 
   const componentsText = item.component_items
-    .map((className) => {
-      const compItem = itemsMap?.[className]; // lookup by class_name
-
-      if (compItem && compItem.name) {
-        console.log(`[addComponentItems] Found component: class_name=${className}, name=${compItem.name}`);
-        return compItem.name; // use the "name" field
-      } else {
-        console.warn(`[addComponentItems] Component not found in itemsMap: class_name=${className}`);
-        return capitalize(className.replace(/_/g, " ")); // fallback
-      }
+    .map((componentClassName) => {
+      const compItem = allItemsArray.find(i => i.class_name === componentClassName);
+      return compItem?.name || capitalize(componentClassName.replace(/_/g, " "));
     })
     .join(", ");
-
-  console.log(`[addComponentItems] Final Upgrade Path for ${item.name}: ${componentsText}`);
 
   if (componentsText) {
     embed.addFields({
@@ -119,6 +105,7 @@ function addComponentItems(embed, item, itemsMap) {
     });
   }
 }
+
 
 // Build the full item embed
 export function buildItemEmbed(item, itemsMap) {
@@ -164,7 +151,7 @@ export function buildItemEmbed(item, itemsMap) {
   addTooltipSections(embed, item, descriptionText);
 
   // Add upgrade path if it exists (safe lookup)
-  addComponentItems(embed, item, itemsMap);
+  addComponentItems(embed, item, allItemsArray);
 
   return embed;
 }

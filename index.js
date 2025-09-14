@@ -338,7 +338,9 @@ client.on('interactionCreate', async (interaction) => {
       return interaction.reply({ content: "Item not found!", ephemeral: true });
     }
 
-    const embed = buildItemEmbed(item);
+    // Pass the full fetched array into buildItemEmbed
+    const embed = buildItemEmbed(item, upgrades);
+
     await interaction.reply({ content: getRandomLine(), embeds: [embed] });
   }
 
