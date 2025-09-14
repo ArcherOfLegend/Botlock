@@ -38,8 +38,8 @@ function buildPropertyContent(item, propKeys, isBold = false) {
 
       let prefix = prop.prefix?.replace("{s:sign}", "") ?? "";
 
-      // If no prefix and value > 0, add "+"
-      if (!prefix && Number(prop.value) > 0) {
+      // If prefix is empty and value is not zero, add "+"
+      if (!prefix && prop.value && prop.value !== "0") {
         prefix = "+";
       }
 
