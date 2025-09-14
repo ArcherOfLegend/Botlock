@@ -106,7 +106,7 @@ function addComponentItems(embed, item, itemsMap) {
 }
 
 // Build the full item embed
-export function buildItemEmbed(item) {
+export function buildItemEmbed(item, itemsMap) {
   const embed = new EmbedBuilder()
     .setTitle(`${item.name} ($${item.cost})`)
     .setThumbnail(item.shop_image)
