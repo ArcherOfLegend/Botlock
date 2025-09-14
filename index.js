@@ -203,33 +203,32 @@ client.on('interactionCreate', async (interaction) => {
       // ----- ABILITY ORDER -----
       const currencyChanges = buildData.details.ability_order?.currency_changes || [];
       if (currencyChanges.length) {
+        const abilityCount = {}; // track first unlock per ability
         const abilitySequence = [];
+
         for (const change of currencyChanges) {
           const ability = abilities.find(a => a.id === change.ability_id);
           if (!ability) continue;
 
-          const points = Math.abs(change.delta);
-          for (let i = 0; i < points; i++) {
-            abilitySequence.push(ability.name);
+          const absDelta = Math.abs(change.delta);
+
+          // skip first unlock
+          if (!abilityCount[ability.id]) {
+            abilityCount[ability.id] = true;
+            continue;
           }
+
+          // map delta to tier
+          let tier = '';
+          if (absDelta === 1) tier = 'Tier 1';
+          else if (absDelta === 2) tier = 'Tier 2';
+          else if (absDelta === 5) tier = 'Tier 3';
+          else tier = `Tier ? (${absDelta})`;
+
+          abilitySequence.push(`${ability.name} ${tier}`);
         }
 
-        // Combine consecutive duplicates
-        const combinedSequence = [];
-        let last = null;
-        let count = 0;
-        for (const name of abilitySequence) {
-          if (name === last) {
-            count++;
-          } else {
-            if (last) combinedSequence.push(`**${last}** ×${count}`);
-            last = name;
-            count = 1;
-          }
-        }
-        if (last) combinedSequence.push(`**${last}** ×${count}`);
-
-        categories['Ability Order'] = combinedSequence;
+        categories['Ability Order'] = abilitySequence;
       }
 
       const categoryNames = Object.keys(categories);
