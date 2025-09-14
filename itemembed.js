@@ -36,8 +36,13 @@ function buildPropertyContent(item, propKeys, isBold = false) {
       const prop = item.properties?.[key];
       if (!prop) return null;
 
-      // Use prefix if provided (e.g., "-" for FireRateSlow)
-      const prefix = prop.prefix?.replace("{s:sign}", "") || "";
+      let prefix = prop.prefix?.replace("{s:sign}", "") ?? "";
+
+      // If no prefix and value > 0, add "+"
+      if (!prefix && Number(prop.value) > 0) {
+        prefix = "+";
+      }
+
       const text = `${prefix}${prop.value}${prop.postfix || ""} ${prop.label}`;
       return isBold ? `**${text}**` : text;
     })
