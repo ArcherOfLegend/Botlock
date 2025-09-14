@@ -13,6 +13,15 @@ const emojiMap = {
   weapon: "<:weapon:1412785897983705108>",
 };
 
+// Build items map from all items array
+export function buildItemsMap(allItems) {
+  const map = {};
+  allItems.forEach((i) => {
+    if (i.class_name) map[i.class_name] = i;
+  });
+  return map;
+}
+
 // Extract description from tooltip sections
 function getDescriptionFromSections(item) {
   if (!item.tooltip_sections?.length) return "";
@@ -87,26 +96,26 @@ function addTooltipSections(embed, item, descriptionText) {
   }
 }
 
+// Add component / upgrade path safely
 function addComponentItems(embed, item, itemsMap) {
   if (!item.component_items?.length) return;
 
   const componentsText = item.component_items
     .map((className) => {
-      const compItem = itemsMap?.[className]; // safe optional chaining
-      if (compItem?.name) return compItem.name; // use human-readable name
+      const compItem = itemsMap[className];
+      if (compItem?.name) return compItem.name; // human-readable name
       return null; // skip if not found
     })
-    .filter(Boolean) // remove nulls
+    .filter(Boolean)
     .join(", ");
 
-  if (componentsText) {
-    embed.addFields({
-      name: "Upgrade Path",
-      value: componentsText,
-    });
-  }
-}
+  if (!componentsText) return; // don’t add empty field
 
+  embed.addFields({
+    name: "Upgrade Path",
+    value: componentsText,
+  });
+}
 
 // Build the full item embed
 export function buildItemEmbed(item, itemsMap) {

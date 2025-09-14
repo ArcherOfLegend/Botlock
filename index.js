@@ -201,10 +201,10 @@ client.on('interactionCreate', async (interaction) => {
       }
 
       // ----- ABILITY ORDER -----
-      if (buildData.details.ability_order?.currency_changes?.length) {
+      const currencyChanges = buildData.details.ability_order?.currency_changes || [];
+      if (currencyChanges.length) {
         const abilitySequence = [];
-
-        for (const change of buildData.details.ability_order.currency_changes) {
+        for (const change of currencyChanges) {
           const ability = abilities.find(a => a.id === change.ability_id);
           if (!ability) continue;
 
@@ -214,11 +214,10 @@ client.on('interactionCreate', async (interaction) => {
           }
         }
 
-        // Combine consecutive duplicates for cleaner display
+        // Combine consecutive duplicates
         const combinedSequence = [];
         let last = null;
         let count = 0;
-
         for (const name of abilitySequence) {
           if (name === last) {
             count++;
