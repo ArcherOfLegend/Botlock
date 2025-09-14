@@ -87,16 +87,29 @@ function addTooltipSections(embed, item, descriptionText) {
   }
 }
 
-// Add component / upgrade path safely using the item's "name" field, with logging
+// Add component / upgrade path dynamically
 function addComponentItems(embed, item, allItemsArray) {
-  if (!item.component_items?.length) return;
+  if (!item.component_items?.length) {
+    console.log(`[addComponentItems] No component items for ${item.name}`);
+    return;
+  }
+
+  console.log(`[addComponentItems] Processing component items for ${item.name}:`, item.component_items);
 
   const componentsText = item.component_items
     .map((componentClassName) => {
       const compItem = allItemsArray.find(i => i.class_name === componentClassName);
-      return compItem?.name || capitalize(componentClassName.replace(/_/g, " "));
+      if (compItem && compItem.name) {
+        console.log(`[addComponentItems] Found component: class_name=${componentClassName}, name=${compItem.name}`);
+        return compItem.name;
+      } else {
+        console.warn(`[addComponentItems] Component not found: class_name=${componentClassName}`);
+        return capitalize(componentClassName.replace(/_/g, " "));
+      }
     })
     .join(", ");
+
+  console.log(`[addComponentItems] Final Upgrade Path for ${item.name}: ${componentsText}`);
 
   if (componentsText) {
     embed.addFields({
@@ -106,9 +119,8 @@ function addComponentItems(embed, item, allItemsArray) {
   }
 }
 
-
-// Build the full item embed
-export function buildItemEmbed(item, itemsMap) {
+// Build the full item embed dynamically with API data
+export function buildItemEmbed(item, allItemsArray) {
   const embed = new EmbedBuilder()
     .setTitle(`${item.name} ($${item.cost})`)
     .setThumbnail(item.shop_image)
@@ -134,9 +146,7 @@ export function buildItemEmbed(item, itemsMap) {
 
   // Add activation
   if (item.activation) {
-    const activationText = ["instant_cast", "press"].includes(
-      item.activation.toLowerCase()
-    )
+    const activationText = ["instant_cast", "press"].includes(item.activation.toLowerCase())
       ? "Active"
       : capitalize(item.activation);
 
@@ -150,7 +160,7 @@ export function buildItemEmbed(item, itemsMap) {
   // Add tooltip sections (stats)
   addTooltipSections(embed, item, descriptionText);
 
-  // Add upgrade path if it exists (safe lookup)
+  // Add upgrade path if it exists
   addComponentItems(embed, item, allItemsArray);
 
   return embed;
