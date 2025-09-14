@@ -185,7 +185,11 @@ client.on('interactionCreate', async (interaction) => {
       const upgradesRes = await axios.get('https://assets.deadlock-api.com/v2/items/by-type/upgrade');
       const upgrades = upgradesRes.data;
 
+      const abilitiesRes = await axios.get('https://assets.deadlock-api.com/v2/items/by-type/ability');
+      const abilities = abilitiesRes.data;
+
       const categories = {};
+      // Add mod categories
       for (const category of buildData.details.mod_categories) {
         categories[category.name] = category.mods.map(mod => {
           const upgrade = upgrades.find(u => u.id === mod.ability_id);
@@ -193,6 +197,18 @@ client.on('interactionCreate', async (interaction) => {
             ? `**${upgrade.name}** (Cost: ${upgrade.cost}, Tier: ${upgrade.item_tier})`
             : `Unknown Item (${mod.ability_id})`;
         });
+      }
+
+      // Add ability order
+      const abilityOrder = buildData.ability_order?.currency_changes?.map(change => {
+        const ability = abilities.find(a => a.id === change.ability_id);
+        return ability
+          ? `**${ability.name}** (Delta: ${change.delta}, Currency: ${change.currency_type})`
+          : `Unknown Ability (${change.ability_id})`;
+      }) || [];
+
+      if (abilityOrder.length > 0) {
+        categories['Ability Order'] = abilityOrder;
       }
 
       const categoryNames = Object.keys(categories);
