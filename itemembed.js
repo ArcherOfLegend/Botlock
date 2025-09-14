@@ -18,21 +18,18 @@ function getDescriptionFromSections(item) {
   if (!item.tooltip_sections?.length) return "";
 
   const descriptions = [];
+  for (const section of item.tooltip_sections) {
+    if (!section.section_attributes) continue;
 
-  item.tooltip_sections.forEach((section) => {
-    if (!section.section_attributes) return;
+    for (const attr of section.section_attributes) {
+      if (!attr.loc_string) continue;
+      const cleanText = attr.loc_string.replace(/<[^>]+>/g, "").trim();
 
-    section.section_attributes.forEach((attr) => {
-      if (attr.loc_string) {
-        const cleanText = attr.loc_string.replace(/<[^>]+>/g, "");
-        if (cleanText.trim()) {
-          descriptions.push(cleanText);
-        }
-      }
-    });
-  });
-
-  return descriptions.join("\n\n"); // put blank line between sections
+      if (!cleanText) continue;
+      descriptions.push(cleanText);
+    }
+  }
+  return descriptions.join("\n\n");
 }
 
 export function buildItemEmbed(item) {
@@ -41,7 +38,7 @@ export function buildItemEmbed(item) {
     .setThumbnail(item.shop_image)
     .setColor(0xffd700);
 
-  const descriptionText = getDescriptionFromSections(item)
+  const descriptionText = getDescriptionFromSections(item);
 
   // Show general description if available
   if (descriptionText) {
@@ -54,8 +51,7 @@ export function buildItemEmbed(item) {
   // Item type
   if (item.item_slot_type) {
     const typeName = capitalize(item.item_slot_type);
-    const emoji = 
-      emojiMap[item.item_slot_type.toLowerCase()] || "";
+    const emoji = emojiMap[item.item_slot_type.toLowerCase()] || "";
 
     embed.addFields({
       name: "Type",
@@ -78,67 +74,63 @@ export function buildItemEmbed(item) {
   }
 
   // Tooltip sections
-  if (item.tooltip_sections?.length) {
-    item.tooltip_sections.forEach((section) => {
-      const sectionLabel = capitalize(section?.section_type);
-      const sectionContent = [];
+  if (!item.tooltip_sections?.length) return null;
 
-      if (section.section_attributes) {
-        section.section_attributes.forEach((attr) => {
-          // Important properties first (bold)
-          if (attr.important_properties?.length) {
-            attr.important_properties.forEach((propKey) => {
-              const prop = item.properties?.[propKey];
-              if (prop) {
-                sectionContent.push(
-                  `**+${prop.value}${prop.postfix || ""} ${prop.label}**`
-                );
-              }
-            });
-          }
+  item.tooltip_sections.forEach((section) => {
+    const sectionLabel = capitalize(section?.section_type);
+    if (!sectionLabel) return;
 
-          // Normal properties
-          if (attr.properties?.length) {
-            attr.properties.forEach((propKey) => {
-              const prop = item.properties?.[propKey];
-              if (prop) {
-                sectionContent.push(
-                  `+${prop.value}${prop.postfix || ""} ${prop.label}`
-                );
-              }
-            });
-          }
+    const value = buildSectionValue(section, item, descriptionText);
+    if (value === null) return;
 
-          // Elevated properties
-          if (attr.elevated_properties?.length) {
-            attr.elevated_properties.forEach((propKey) => {
-              const prop = item.properties?.[propKey];
-              if (prop) {
-                sectionContent.push(
-                  `**+${prop.value}${prop.postfix || ""} ${prop.label}**`
-                );
-              }
-            });
-          }
-
-          // loc_string (only if different from main description)
-          if (attr.loc_string) {
-            const text = attr.loc_string.replace(/<[^>]+>/g, "");
-            if (text !== descriptionText) {
-              sectionContent.push(text);
-            }
-          }
-        });
-      }
-
-      if (sectionContent.length && sectionLabel) {
-        embed.addFields({
-          name: sectionLabel,
-          value: sectionContent.join("\n"),
-        });
-      }
+    embed.addFields({
+      name: sectionLabel,
+      value,
     });
-  }
+  });
 
   return embed;
+}
+
+function buildSectionValue(section, item, descriptionText) {
+  if (!section.section_attributes) return null;
+
+  const sectionContent = [];
+  section.section_attributes.forEach((attr) => {
+    // Important properties (bold)
+    if (!attr.important_properties?.length) return null;
+    const importantContent = buildPropertyContent(attr.important_properties, item, true);
+    if (importantContent) sectionContent.push(...importantContent);
+
+    // Normal properties
+    if (!attr.properties?.length) return null;
+    const normalContent = buildPropertyContent(attr.properties, item, false);
+    if (normalContent) sectionContent.push(...normalContent);
+
+    // Elevated properties (bold)
+    if (!attr.elevated_properties?.length) return null;
+    const elevatedContent = buildPropertyContent(attr.elevated_properties, item, true);
+    if (elevatedContent) sectionContent.push(...elevatedContent);
+
+    // loc_string (skip if same as descriptionText)
+    if (!attr.loc_string) return null;
+    const text = attr.loc_string.replace(/<[^>]+>/g, "");
+    if (text === descriptionText) return null;
+    sectionContent.push(text);
+  });
+
+  if (!sectionContent.length) return null;
+
+  return sectionContent.join("\n");
+}
+
+function buildPropertyContent(propKeys, item, isBold) {
+  const content = [];
+  propKeys.forEach((propKey) => {
+    const prop = item.properties?.[propKey];
+    if (!prop) return;
+    const formatted = `${isBold ? "**" : ""}+${prop.value}${prop.postfix || ""} ${prop.label}${isBold ? "**" : ""}`;
+    content.push(formatted);
+  });
+  return content.length ? content : null;
 }
