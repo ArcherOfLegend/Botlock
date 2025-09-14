@@ -13,15 +13,6 @@ const emojiMap = {
   weapon: "<:weapon:1412785897983705108>",
 };
 
-// Build items map from all items array
-export function buildItemsMap(allItems) {
-  const map = {};
-  allItems.forEach((i) => {
-    if (i.class_name) map[i.class_name] = i;
-  });
-  return map;
-}
-
 // Extract description from tooltip sections
 function getDescriptionFromSections(item) {
   if (!item.tooltip_sections?.length) return "";
@@ -96,25 +87,37 @@ function addTooltipSections(embed, item, descriptionText) {
   }
 }
 
-// Add component / upgrade path safely
+// Add component / upgrade path safely using the item's "name" field, with logging
 function addComponentItems(embed, item, itemsMap) {
-  if (!item.component_items?.length) return;
+  if (!item.component_items?.length) {
+    console.log(`[addComponentItems] No component items for ${item.name}`);
+    return;
+  }
+
+  console.log(`[addComponentItems] Processing component items for ${item.name}:`, item.component_items);
 
   const componentsText = item.component_items
     .map((className) => {
-      const compItem = itemsMap[className];
-      if (compItem?.name) return compItem.name; // human-readable name
-      return null; // skip if not found
+      const compItem = itemsMap?.[className]; // lookup by class_name
+
+      if (compItem && compItem.name) {
+        console.log(`[addComponentItems] Found component: class_name=${className}, name=${compItem.name}`);
+        return compItem.name; // use the "name" field
+      } else {
+        console.warn(`[addComponentItems] Component not found in itemsMap: class_name=${className}`);
+        return capitalize(className.replace(/_/g, " ")); // fallback
+      }
     })
-    .filter(Boolean)
     .join(", ");
 
-  if (!componentsText) return; // don’t add empty field
+  console.log(`[addComponentItems] Final Upgrade Path for ${item.name}: ${componentsText}`);
 
-  embed.addFields({
-    name: "Upgrade Path",
-    value: componentsText,
-  });
+  if (componentsText) {
+    embed.addFields({
+      name: "Upgrade Path",
+      value: componentsText,
+    });
+  }
 }
 
 // Build the full item embed
