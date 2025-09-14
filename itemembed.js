@@ -17,19 +17,70 @@ const emojiMap = {
 function getDescriptionFromSections(item) {
   if (!item.tooltip_sections?.length) return "";
 
-  const descriptions = [];
-  for (const section of item.tooltip_sections) {
-    if (!section.section_attributes) continue;
+  return item.tooltip_sections
+    .flatMap((section) =>
+      section.section_attributes?.map((attr) => {
+        if (!attr.loc_string) return null;
+        const cleanText = attr.loc_string.replace(/<[^>]+>/g, "").trim();
+        return cleanText || null;
+      }) || []
+    )
+    .filter(Boolean)
+    .join("\n\n"); // blank line between sections
+}
 
-    for (const attr of section.section_attributes) {
-      if (!attr.loc_string) continue;
-      const cleanText = attr.loc_string.replace(/<[^>]+>/g, "").trim();
+// Build text from property keys
+function buildPropertyContent(item, propKeys, isBold = false) {
+  if (!propKeys?.length) return [];
+  return propKeys
+    .map((key) => {
+      const prop = item.properties?.[key];
+      if (!prop) return null;
 
-      if (!cleanText) continue;
-      descriptions.push(cleanText);
+      const text = `+${prop.value}${prop.postfix || ""} ${prop.label}`;
+      return isBold ? `**${text}**` : text;
+    })
+    .filter(Boolean);
+}
+
+// Build content for one attribute
+function buildAttributeContent(item, attr, descriptionText) {
+  const parts = [
+    ...buildPropertyContent(item, attr.important_properties, true),
+    ...buildPropertyContent(item, attr.properties, false),
+    ...buildPropertyContent(item, attr.elevated_properties, true),
+  ];
+
+  if (attr.loc_string) {
+    const text = attr.loc_string.replace(/<[^>]+>/g, "");
+    if (text !== descriptionText) {
+      parts.push(text);
     }
   }
-  return descriptions.join("\n\n");
+
+  return parts;
+}
+
+// Add tooltip sections into embed
+function addTooltipSections(embed, item, descriptionText) {
+  if (!item.tooltip_sections?.length) return;
+
+  for (const section of item.tooltip_sections) {
+    const sectionLabel = capitalize(section?.section_type);
+    if (!sectionLabel || !section.section_attributes) continue;
+
+    const sectionContent = section.section_attributes
+      .map((attr) => buildAttributeContent(item, attr, descriptionText))
+      .flat()
+      .filter(Boolean);
+
+    if (sectionContent.length) {
+      embed.addFields({
+        name: sectionLabel,
+        value: sectionContent.join("\n"),
+      });
+    }
+  }
 }
 
 export function buildItemEmbed(item) {
@@ -40,15 +91,10 @@ export function buildItemEmbed(item) {
 
   const descriptionText = getDescriptionFromSections(item);
 
-  // Show general description if available
   if (descriptionText) {
-    embed.addFields({
-      name: "Description",
-      value: descriptionText,
-    });
+    embed.addFields({ name: "Description", value: descriptionText });
   }
 
-  // Item type
   if (item.item_slot_type) {
     const typeName = capitalize(item.item_slot_type);
     const emoji = emojiMap[item.item_slot_type.toLowerCase()] || "";
@@ -60,9 +106,10 @@ export function buildItemEmbed(item) {
     });
   }
 
-  // Activation / passive
   if (item.activation) {
-    const activationText = ["instant_cast", "press"].includes(item.activation.toLowerCase())
+    const activationText = ["instant_cast", "press"].includes(
+      item.activation.toLowerCase()
+    )
       ? "Active"
       : capitalize(item.activation);
 
@@ -73,64 +120,7 @@ export function buildItemEmbed(item) {
     });
   }
 
-  // Tooltip sections
-  if (!item.tooltip_sections?.length) return null;
-
-  item.tooltip_sections.forEach((section) => {
-    const sectionLabel = capitalize(section?.section_type);
-    if (!sectionLabel) return;
-
-    const value = buildSectionValue(section, item, descriptionText);
-    if (value === null) return;
-
-    embed.addFields({
-      name: sectionLabel,
-      value,
-    });
-  });
+  addTooltipSections(embed, item, descriptionText);
 
   return embed;
-}
-
-function buildSectionValue(section, item, descriptionText) {
-  if (!section.section_attributes) return null;
-
-  const sectionContent = [];
-  section.section_attributes.forEach((attr) => {
-    // Important properties (bold)
-    if (!attr.important_properties?.length) return null;
-    const importantContent = buildPropertyContent(attr.important_properties, item, true);
-    if (importantContent) sectionContent.push(...importantContent);
-
-    // Normal properties
-    if (!attr.properties?.length) return null;
-    const normalContent = buildPropertyContent(attr.properties, item, false);
-    if (normalContent) sectionContent.push(...normalContent);
-
-    // Elevated properties (bold)
-    if (!attr.elevated_properties?.length) return null;
-    const elevatedContent = buildPropertyContent(attr.elevated_properties, item, true);
-    if (elevatedContent) sectionContent.push(...elevatedContent);
-
-    // loc_string (skip if same as descriptionText)
-    if (!attr.loc_string) return null;
-    const text = attr.loc_string.replace(/<[^>]+>/g, "");
-    if (text === descriptionText) return null;
-    sectionContent.push(text);
-  });
-
-  if (!sectionContent.length) return null;
-
-  return sectionContent.join("\n");
-}
-
-function buildPropertyContent(propKeys, item, isBold) {
-  const content = [];
-  propKeys.forEach((propKey) => {
-    const prop = item.properties?.[propKey];
-    if (!prop) return;
-    const formatted = `${isBold ? "**" : ""}+${prop.value}${prop.postfix || ""} ${prop.label}${isBold ? "**" : ""}`;
-    content.push(formatted);
-  });
-  return content.length ? content : null;
 }
