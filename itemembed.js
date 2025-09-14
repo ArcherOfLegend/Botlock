@@ -92,11 +92,11 @@ function addComponentItems(embed, item, itemsMap) {
 
   const componentsText = item.component_items
     .map((className) => {
-      const compItem = itemsMap[className];
-      if (compItem?.name) return compItem.name; // human-readable name
+      const compItem = itemsMap?.[className]; // safe optional chaining
+      if (compItem?.name) return compItem.name; // use human-readable name
       return null; // skip if not found
     })
-    .filter(Boolean)
+    .filter(Boolean) // remove nulls
     .join(", ");
 
   if (componentsText) {
@@ -106,6 +106,7 @@ function addComponentItems(embed, item, itemsMap) {
     });
   }
 }
+
 
 // Build the full item embed
 export function buildItemEmbed(item, itemsMap) {
