@@ -31,8 +31,14 @@ function parseHtmlToText(html) {
     $(el).replaceWith($(el).text());
   });
 
-  // Return cleaned text
-  return $.text().trim();
+  // Extract raw text
+  let text = $.text();
+
+  // Collapse multiple spaces/newlines → single space
+  text = text.replace(/\s*\n\s*/g, " "); // join broken lines
+  text = text.replace(/\s{2,}/g, " ");   // collapse double+ spaces
+
+  return text.trim();
 }
 
 // Extract description from tooltip sections
