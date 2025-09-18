@@ -1,5 +1,15 @@
 import { EmbedBuilder } from "discord.js";
 
+// Remove SVG and HTML markup from a string
+export function stripMarkup(str) {
+  if (!str) return "";
+  // Remove SVG blocks
+  let cleaned = str.replace(/<svg[\s\S]*?<\/svg>/gi, "");
+  // Remove all other HTML tags
+  cleaned = cleaned.replace(/<[^>]+>/g, "");
+  return cleaned.trim();
+}
+
 // Capitalize helper
 function capitalize(str) {
   if (!str) return "";
@@ -127,8 +137,9 @@ export function buildItemEmbed(item, allItemsArray) {
     .setColor(0xffd700);
 
   // Add description
-  const descriptionText = getDescriptionFromSections(item);
+  let descriptionText = getDescriptionFromSections(item);
   if (descriptionText) {
+    descriptionText = stripMarkup(descriptionText);
     embed.addFields({ name: "Description", value: descriptionText });
   }
 
