@@ -1,14 +1,5 @@
 import { EmbedBuilder } from "discord.js";
-
-// Remove SVG and HTML markup from a string
-export function stripMarkup(str) {
-  if (!str) return "";
-  // Remove SVG blocks
-  let cleaned = str.replace(/<svg[\s\S]*?<\/svg>/gi, "");
-  // Remove all other HTML tags
-  cleaned = cleaned.replace(/<[^>]+>/g, "");
-  return cleaned.trim();
-}
+import * as cheerio from "cheerio";
 
 // Capitalize helper
 function capitalize(str) {
@@ -23,6 +14,27 @@ const emojiMap = {
   weapon: "<:weapon:1412785897983705108>",
 };
 
+// --- HTML to Discord-safe text ---
+function parseHtmlToText(html) {
+  if (!html) return "";
+
+  const $ = cheerio.load(html);
+
+  // Remove SVGs completely
+  $("svg").remove();
+
+  // Handle known spans
+  $(".highlight").each((_, el) => {
+    $(el).replaceWith(`**${$(el).text()}**`);
+  });
+  $(".inline-attribute-label").each((_, el) => {
+    $(el).replaceWith($(el).text());
+  });
+
+  // Return cleaned text
+  return $.text().trim();
+}
+
 // Extract description from tooltip sections
 function getDescriptionFromSections(item) {
   if (!item.tooltip_sections?.length) return "";
@@ -31,7 +43,7 @@ function getDescriptionFromSections(item) {
     .flatMap((section) =>
       section.section_attributes?.map((attr) => {
         if (!attr.loc_string) return null;
-        return attr.loc_string.replace(/<[^>]+>/g, "").trim();
+        return parseHtmlToText(attr.loc_string);
       }) || []
     )
     .filter(Boolean)
@@ -68,7 +80,7 @@ function buildAttributeContent(item, attr, descriptionText) {
   ];
 
   if (attr.loc_string) {
-    const text = attr.loc_string.replace(/<[^>]+>/g, "").trim();
+    const text = parseHtmlToText(attr.loc_string);
     if (text && text !== descriptionText) {
       parts.push(text);
     }
@@ -137,9 +149,8 @@ export function buildItemEmbed(item, allItemsArray) {
     .setColor(0xffd700);
 
   // Add description
-  let descriptionText = getDescriptionFromSections(item);
+  const descriptionText = getDescriptionFromSections(item);
   if (descriptionText) {
-    descriptionText = stripMarkup(descriptionText);
     embed.addFields({ name: "Description", value: descriptionText });
   }
 
@@ -150,7 +161,7 @@ export function buildItemEmbed(item, allItemsArray) {
 
     embed.addFields({
       name: "Type",
-      value: `${emoji} ${typeName}`,
+      value: `${emoji} ${typeName}`.trim(),
       inline: true,
     });
   }

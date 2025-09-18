@@ -4,7 +4,7 @@ RUN mkdir -p /usr/src/bot
 WORKDIR /usr/src/bot
 
 COPY package.json /usr/src/bot
-RUN npm install express express-session passport passport-steam
+RUN npm install cheerio axios discord.js dotenv
 
 COPY . /usr/src/bot
 
