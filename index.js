@@ -179,13 +179,21 @@ client.on('interactionCreate', async (interaction) => {
 
   // ----------------- /register -----------------
   if (commandName === "register") {
-    const steamId = interaction.options.getString("steamid");
+    const input = interaction.options.getString("steamid");
     const discordId = interaction.user.id;
 
+    // Allow both "[U:1:123456]" and "123456"
+    let steamId;
     const steamId3Pattern = /^\[U:1:\d+\]$/;
-    if (!steamId3Pattern.test(steamId)) {
+    const numericPattern = /^\d+$/;
+
+    if (steamId3Pattern.test(input)) {
+      steamId = input; // already full SteamID3
+    } else if (numericPattern.test(input)) {
+      steamId = `[U:1:${input}]`; // convert to SteamID3
+    } else {
       return interaction.reply({
-        content: "Invalid SteamID3 format. Example: `[U:1:123456]`",
+        content: "Invalid input. Please provide either a SteamID3 like `[U:1:123456]` or just the numeric ID `123456`.",
         ephemeral: true,
       });
     }
