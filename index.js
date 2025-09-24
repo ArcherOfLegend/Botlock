@@ -4,6 +4,7 @@ import { readFileSync } from 'fs';
 import 'dotenv/config';
 import { setChannel, getChannel, getAllChannels } from './broadcastChannels.js';
 import { buildItemEmbed } from "./itemembed.js"; // path to parser
+import { REGISTRY } from "./userRegistry.js";
 
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -85,6 +86,17 @@ client.once('ready', async () => {
         .setRequired(true)
       ),
     new SlashCommandBuilder()
+      .setName("register")
+      .setDescription("Link your SteamID3 to your Discord account")
+      .addStringOption(option =>
+        option.setName("steamid")
+          .setDescription("Your SteamID3 (e.g. [U:1:123456])")
+          .setRequired(true)
+      ),
+    new SlashCommandBuilder()
+      .setName("unregister")
+      .setDescription("Remove your linked SteamID3"),
+    new SlashCommandBuilder()
       .setName('help')
       .setDescription('Show a list of all available commands'),
   ].map(cmd => cmd.toJSON());
@@ -164,6 +176,47 @@ client.on('interactionCreate', async (interaction) => {
 
     return interaction.reply({ embeds: [helpEmbed], ephemeral: true });
   }
+
+  // ----------------- /register -----------------
+  if (commandName === "register") {
+    const steamId = interaction.options.getString("steamid");
+    const discordId = interaction.user.id;
+
+    const steamId3Pattern = /^\[U:1:\d+\]$/;
+    if (!steamId3Pattern.test(steamId)) {
+      return interaction.reply({
+        content: "Invalid SteamID3 format. Example: `[U:1:123456]`",
+        ephemeral: true,
+      });
+    }
+
+    REGISTRY.register(discordId, steamId);
+
+    return interaction.reply({
+      content: `Registered your Discord account to SteamID: **${steamId}**`,
+      ephemeral: true,
+    });
+  }
+
+  // ----------------- /unregister -----------------
+  if (commandName === "unregister") {
+    const discordId = interaction.user.id;
+
+    if (!REGISTRY.isRegistered(discordId)) {
+      return interaction.reply({
+        content: "You don't have a SteamID linked.",
+        ephemeral: true,
+      });
+    }
+
+    REGISTRY.unregister(discordId);
+
+    return interaction.reply({
+      content: "Your SteamID has been unlinked.",
+      ephemeral: true,
+    });
+  }
+  // keep your existing handlers for /build, /hero, /item, /feedback, /broadcast, /setbroadcast ...
 
   // ----------------- /build -----------------
   if (commandName === 'build') {
