@@ -248,7 +248,7 @@ client.on('interactionCreate', async (interaction) => {
     if (!REGISTRY.isRegistered(discordId)) {
       return interaction.reply({ content: "You must first link your SteamID using `/register`.", ephemeral: true });
     }
-    const steamId = REGISTRY.getSteamId(discordId);
+    const steamId = REGISTRY.get(discordId);
     try {
       const match = await getLastMatch(steamId);
       if (!match) return interaction.reply("No matches found.");
@@ -289,7 +289,7 @@ client.on('interactionCreate', async (interaction) => {
       return interaction.reply({ content: "You must first link your SteamID using `/register`.", ephemeral: true });
     }
 
-    const steamId = REGISTRY.getSteamId(discordId);
+    const steamId = REGISTRY.get(discordId);
 
     try {
       // 1. Fetch recent matches for this player
