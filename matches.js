@@ -161,3 +161,39 @@ export class DigestLM {
     }
   }
 }
+
+export async function getLastMatch(steamId) {
+  try {
+    // Fetch recent matches (limit 1 for last match)
+    const res = await axios.get("https://api.deadlock-api.com/v1/matches", {
+      params: { steam_id: steamId, limit: 1 }
+    });
+
+    const matches = res.data;
+    if (!matches || matches.length === 0) return null;
+
+    const lastMatchData = matches[0];
+
+    // Fetch detailed match info
+    const lmRes = await axios.get(`https://api.deadlock-api.com/v1/matches/${lastMatchData.match_id}`);
+    const lmDetailed = lmRes.data;
+
+    // Construct DigestLM object for the player
+    const digest = new DigestLM(steamId, lmDetailed);
+
+    // Return a structured last match object
+    return {
+      match_id: digest.lmId,
+      hero: digest.playerHero,
+      kills: digest.kills,
+      deaths: digest.deaths,
+      assists: digest.assists,
+      items: digest.playerItems,
+      result: digest.victory ? "Win" : "Loss",
+      duration: Math.floor(digest.duration / 60) // convert seconds to minutes
+    };
+  } catch (err) {
+    console.error("[getLastMatch] Error fetching last match:", err);
+    return null;
+  }
+}
