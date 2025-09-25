@@ -260,9 +260,11 @@ client.on('interactionCreate', async (interaction) => {
       const res = await axios.get("https://api.deadlock-api.com/v1/matches", {
         params: { steam_id: steamId, limit: 1 }
       });
+      console.log(`[LASTMATCH] Match history response:`, res.data);
 
       const matches = res.data;
       if (!matches || matches.length === 0) {
+        console.log(`[LASTMATCH] No matches found for SteamID ${steamId}.`);
         return interaction.reply("No matches found for your SteamID.");
       }
 
