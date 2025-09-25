@@ -5,6 +5,8 @@ import 'dotenv/config';
 import { setChannel, getChannel, getAllChannels } from './broadcastChannels.js';
 import { buildItemEmbed } from "./itemembed.js"; // path to parser
 import { REGISTRY } from "./userRegistry.js";
+import { getLastMatch, getHeroStatsForPlayer, getHeroId, heroName, ALIASES } from "./matches.js"; // NEW
+import { formatItemList } from "./item_utils.js"; // NEW
 
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -97,6 +99,17 @@ client.once('ready', async () => {
       .setName("unregister")
       .setDescription("Remove your linked SteamID3"),
     new SlashCommandBuilder()
+      .setName('lastmatch')
+      .setDescription('Retrieve your last played match using your registered SteamID'),
+    new SlashCommandBuilder()
+      .setName('stats')
+      .setDescription('Get your personal stats for a specific hero')
+      .addStringOption(option =>
+        option.setName('hero')
+          .setDescription('Hero name')
+          .setRequired(true)
+      ),
+    new SlashCommandBuilder()
       .setName('help')
       .setDescription('Show a list of all available commands'),
   ].map(cmd => cmd.toJSON());
@@ -168,6 +181,10 @@ client.on('interactionCreate', async (interaction) => {
         { name: '/hero <name>', value: 'Get stats for a specific hero', inline: false },
         { name: '/item <name>', value: 'Get item information', inline: false },
         { name: '/feedback <feedback>', value: 'Provide some feedback', inline: false },
+        { name: '/register <steamid>', value: 'Link your SteamID3 to your Discord account', inline: false },
+        { name: '/unregister', value: 'Remove your linked SteamID3', inline: false },
+        { name: '/lastmatch', value: 'Retrieve your last played match using your registered SteamID', inline: false },
+        { name: '/stats <hero>', value: 'Get your personal stats for a specific hero', inline: false },
         { name: '/setbroadcast <channel>', value: 'Set the broadcast channel for this server (Mod only)', inline: false },
         { name: '/help', value: 'Show this help menu', inline: false }
       )
@@ -224,7 +241,71 @@ client.on('interactionCreate', async (interaction) => {
       ephemeral: true,
     });
   }
-  // keep your existing handlers for /build, /hero, /item, /feedback, /broadcast, /setbroadcast ...
+
+  // ----------------- /lastmatch -----------------
+  if (commandName === "lastmatch") {
+    const discordId = interaction.user.id;
+    if (!REGISTRY.isRegistered(discordId)) {
+      return interaction.reply({ content: "You must first link your SteamID using `/register`.", ephemeral: true });
+    }
+    const steamId = REGISTRY.getSteamId(discordId);
+    try {
+      const match = await getLastMatch(steamId);
+      if (!match) return interaction.reply("No matches found.");
+
+      const embed = new EmbedBuilder()
+        .setTitle(`Last Match for ${interaction.user.username}`)
+        .setDescription(`Match ID: **${match.match_id}**`)
+        .addFields(
+          { name: "Hero", value: match.hero || "Unknown", inline: true },
+          { name: "Result", value: match.result || "Unknown", inline: true },
+          { name: "K/D/A", value: `${match.kills}/${match.deaths}/${match.assists}`, inline: true },
+          { name: "Duration", value: `${match.duration} min`, inline: true },
+          { name: "Items", value: formatItemList(match.items), inline: false }
+        )
+        .setColor(0x2ecc71)
+        .setTimestamp();
+
+      return interaction.reply({ embeds: [embed] });
+    } catch (err) {
+      console.error("[LASTMATCH CMD] Error:", err);
+      return interaction.reply("Failed to fetch your last match.");
+    }
+  }
+
+  // ----------------- /stats -----------------
+  if (commandName === "stats") {
+    const discordId = interaction.user.id;
+    const heroInput = interaction.options.getString("hero");
+
+    if (!REGISTRY.isRegistered(discordId)) {
+      return interaction.reply({ content: "You must first link your SteamID using `/register`.", ephemeral: true });
+    }
+    const steamId = REGISTRY.getSteamId(discordId);
+    try {
+      const stats = await getHeroStatsForPlayer(steamId, heroInput);
+      if (!stats) return interaction.reply(`No stats found for hero **${heroInput}**.`);
+
+      const embed = new EmbedBuilder()
+        .setTitle(`📊 Stats for ${heroInput} (${interaction.user.username})`)
+        .addFields(
+          { name: "Matches", value: stats.matches.toString(), inline: true },
+          { name: "Wins", value: stats.wins.toString(), inline: true },
+          { name: "Win Rate", value: `${stats.winRate.toFixed(2)}%`, inline: true },
+          { name: "Avg Kills", value: stats.avgKills.toFixed(2), inline: true },
+          { name: "Avg Deaths", value: stats.avgDeaths.toFixed(2), inline: true },
+          { name: "Avg Assists", value: stats.avgAssists.toFixed(2), inline: true }
+        )
+        .setColor(0x3498db)
+        .setTimestamp();
+
+      return interaction.reply({ embeds: [embed] });
+    } catch (err) {
+      console.error("[STATS CMD] Error:", err);
+      return interaction.reply("Failed to fetch your hero stats.");
+    }
+  }
+
 
   // ----------------- /build -----------------
   if (commandName === 'build') {
@@ -342,18 +423,21 @@ client.on('interactionCreate', async (interaction) => {
   // ----------------- /hero -----------------
   if (commandName === 'hero') {
     const heroNameInput = interaction.options.getString('name');
+    
 
     try {
-      const heroesRes = await axios.get('https://assets.deadlock-api.com/v2/heroes');
-      const heroes = heroesRes.data;
-      const hero = heroes.find(h => h.name.toLowerCase() === heroNameInput.toLowerCase());
+      // Resolve hero ID using aliases
+      const heroId = getHeroId(heroNameInput);
+      if (!heroId) return interaction.reply(`Hero **${heroNameInput}** not found.`);
+
+      const hero = ALIASES.find(h => h.id === heroId);
       if (!hero) return interaction.reply(`Hero **${heroNameInput}** not found.`);
 
       const statsRes = await axios.get('https://api.deadlock-api.com/v1/analytics/hero-stats');
       const allStats = statsRes.data;
 
       const totalMatches = allStats.reduce((sum, s) => sum + (s.matches || 0), 0);
-      const stats = allStats.find(s => s.hero_id === hero.id);
+      const stats = allStats.find(s => s.hero_id === heroId);
       if (!stats) return interaction.reply(`No stats found for **${hero.name}**.`);
 
       const pickRate = totalMatches > 0 ? (stats.matches / totalMatches) * 100 : 0;
@@ -384,6 +468,7 @@ client.on('interactionCreate', async (interaction) => {
       interaction.reply('Failed to fetch hero stats.');
     }
   }
+
   // ----------------- /item -----------------
   if (commandName === "item") {
     const itemName = interaction.options.getString("name");
