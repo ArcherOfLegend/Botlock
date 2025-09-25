@@ -3,7 +3,7 @@ import axios from "axios";
 const HEROES = (await axios.get("https://assets.deadlock-api.com/v2/heroes?language=english&only_active=true")).data;
 const RANKS = (await axios.get("https://assets.deadlock-api.com/v2/ranks")).data;
 
-const ALIASES = {
+export const ALIASES = {
   "lady geist": ["geist"],
   "mo & krill": ["mo", "krill", "mo and krill", "kriller"],
   "the doorman": ["doorman"],
