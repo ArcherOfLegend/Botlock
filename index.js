@@ -243,7 +243,7 @@ client.on('interactionCreate', async (interaction) => {
   }
 
   // ----------------- /lastmatch -----------------
-  if (commandName === "lastmatch") {
+  /*if (commandName === "lastmatch") {
     const discordId = interaction.user.id;
 
     if (!REGISTRY.isRegistered(discordId)) {
@@ -307,11 +307,11 @@ client.on('interactionCreate', async (interaction) => {
       console.error("[LASTMATCH CMD] Error:", err.response?.data || err.message || err);
       return interaction.reply("Failed to fetch your last match.");
     }
-  }
+  }*/
 
 
   // ----------------- /stats -----------------
-  if (commandName === "stats") {
+  /*if (commandName === "stats") {
     const discordId = interaction.user.id;
     const heroInput = interaction.options.getString("hero");
 
@@ -362,7 +362,7 @@ client.on('interactionCreate', async (interaction) => {
       console.error("[STATS CMD] Error:", err);
       return interaction.reply("Failed to fetch your hero stats.");
     }
-  }
+  }*/
 
 
   // ----------------- /build -----------------
