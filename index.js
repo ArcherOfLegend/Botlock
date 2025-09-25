@@ -245,40 +245,68 @@ client.on('interactionCreate', async (interaction) => {
   // ----------------- /lastmatch -----------------
   if (commandName === "lastmatch") {
     const discordId = interaction.user.id;
+
     if (!REGISTRY.isRegistered(discordId)) {
-      return interaction.reply({ content: "You must first link your SteamID using `/register`.", ephemeral: true });
+      return interaction.reply({ 
+        content: "You must first link your SteamID using `/register`.", 
+        ephemeral: true 
+      });
     }
+
     const steamId = REGISTRY.get(discordId);
+
     try {
-      const match = await getLastMatch(steamId);
-      if (!match) return interaction.reply("No matches found.");
+      // Fetch recent matches (limit 1)
+      const res = await axios.get("https://api.deadlock-api.com/v1/matches", {
+        params: { steam_id: steamId, limit: 1 }
+      });
+
+      const matches = res.data;
+      if (!matches || matches.length === 0) {
+        return interaction.reply("No matches found for your SteamID.");
+      }
+
+      const lastMatchData = matches[0];
+
+      // Fetch detailed match metadata
+      const lmRes = await axios.get(
+        `https://api.deadlock-api.com/v1/matches/${lastMatchData.match_id}/metadata`
+      );
+      const lmDetailed = lmRes.data;
+
+      // Construct DigestLM object
+      const digest = new DigestLM(steamId, lmDetailed);
 
       // Build inventory image
-      const inventoryImage = await dcImageFile(match.items); 
+      const inventoryImage = await dcImageFile(digest.playerItems);
       const buffer = await inventoryImage.png().toBuffer();
 
+      // Create embed
       const embed = new EmbedBuilder()
         .setTitle(`Last Match for ${interaction.user.username}`)
-        .setDescription(`Match ID: **${match.match_id}**`)
+        .setDescription(`Match ID: **${digest.lmId}**`)
         .addFields(
-          { name: "Hero", value: match.hero || "Unknown", inline: true },
-          { name: "Result", value: match.result || "Unknown", inline: true },
-          { name: "K/D/A", value: `${match.kills}/${match.deaths}/${match.assists}`, inline: true },
-          { name: "Duration", value: `${match.duration} min`, inline: true }
+          { name: "Hero", value: heroName(digest.playerHero) || "Unknown", inline: true },
+          { name: "Result", value: digest.victory ? "Win" : "Loss", inline: true },
+          { name: "K/D/A", value: `${digest.kills}/${digest.deaths}/${digest.assists}`, inline: true },
+          { name: "Duration", value: `${Math.floor(digest.duration / 60)} min`, inline: true }
         )
-        .setColor(0x2ecc71)
+        .setColor(digest.victory ? 0x2ecc71 : 0xe74c3c)
         .setTimestamp()
-        .setImage('attachment://inventory.png'); // attach image to embed
+        .setImage('attachment://inventory.png');
 
+      // Reply with embed and inventory image
       return interaction.reply({
         embeds: [embed],
         files: [{ attachment: buffer, name: 'inventory.png' }]
       });
+
     } catch (err) {
-      console.error("[LASTMATCH CMD] Error:", err);
+      console.error("[LASTMATCH CMD] Error:", err.response?.data || err.message || err);
       return interaction.reply("Failed to fetch your last match.");
     }
   }
+
 
   // ----------------- /stats -----------------
   if (commandName === "stats") {
