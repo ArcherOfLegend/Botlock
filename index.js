@@ -5,7 +5,7 @@ import 'dotenv/config';
 import { setChannel, getChannel, getAllChannels } from './broadcastChannels.js';
 import { buildItemEmbed } from "./itemembed.js"; // path to parser
 import { REGISTRY } from "./userRegistry.js";
-import { getLastMatch, getHeroId, heroName, ALIASES } from "./matches.js"; // NEW
+import { getLastMatch, getHeroId, heroName, HEROES } from "./matches.js"; // NEW
 import { getItem, dcImageFile } from "./item_utils.js"; // NEW
 
 
@@ -452,12 +452,12 @@ client.on('interactionCreate', async (interaction) => {
   if (commandName === 'hero') {
     const heroNameInput = interaction.options.getString('name');
     
-
     try {
       // Resolve hero ID using aliases
       const heroId = getHeroId(heroNameInput);
       if (!heroId) return interaction.reply(`Hero **${heroNameInput}** not found.`);
 
+      // Look up the hero object from HEROES array
       const hero = HEROES.find(h => h.id === heroId);
       if (!hero) return interaction.reply(`Hero **${heroNameInput}** not found.`);
 
