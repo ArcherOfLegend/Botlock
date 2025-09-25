@@ -5,7 +5,7 @@ import 'dotenv/config';
 import { setChannel, getChannel, getAllChannels } from './broadcastChannels.js';
 import { buildItemEmbed } from "./itemembed.js"; // path to parser
 import { REGISTRY } from "./userRegistry.js";
-import { getLastMatch, getHeroStatsForPlayer, getHeroId, heroName, ALIASES } from "./matches.js"; // NEW
+import { getLastMatch, getHeroId, heroName, ALIASES } from "./matches.js"; // NEW
 import { getItem, dcImageFile } from "./item_utils.js"; // NEW
 
 
@@ -288,25 +288,46 @@ client.on('interactionCreate', async (interaction) => {
     if (!REGISTRY.isRegistered(discordId)) {
       return interaction.reply({ content: "You must first link your SteamID using `/register`.", ephemeral: true });
     }
+
     const steamId = REGISTRY.getSteamId(discordId);
+
     try {
-      const stats = await getHeroStatsForPlayer(steamId, heroInput);
-      if (!stats) return interaction.reply(`No stats found for hero **${heroInput}**.`);
+      // 1. Fetch recent matches for this player
+      const matchesRes = await axios.get(`https://api.deadlock-api.com/v1/matches`, {
+        params: { steam_id: steamId, limit: 100 }
+      });
+      const matches = matchesRes.data;
+
+      // 2. Resolve hero ID using aliases
+      const heroId = getHeroId(heroInput);
+      if (!heroId) return interaction.reply(`Hero **${heroInput}** not found.`);
+
+      // 3. Filter matches for this hero
+      const heroMatches = matches.filter(m => m.hero_id === heroId);
+      if (heroMatches.length === 0) return interaction.reply(`No matches found for **${heroInput}**.`);
+
+      // 4. Aggregate stats
+      const totalMatches = heroMatches.length;
+      const totalWins = heroMatches.filter(m => m.result === "win").length;
+      const totalKills = heroMatches.reduce((sum, m) => sum + (m.kills || 0), 0);
+      const totalDeaths = heroMatches.reduce((sum, m) => sum + (m.deaths || 0), 0);
+      const totalAssists = heroMatches.reduce((sum, m) => sum + (m.assists || 0), 0);
 
       const embed = new EmbedBuilder()
         .setTitle(`📊 Stats for ${heroInput} (${interaction.user.username})`)
         .addFields(
-          { name: "Matches", value: stats.matches.toString(), inline: true },
-          { name: "Wins", value: stats.wins.toString(), inline: true },
-          { name: "Win Rate", value: `${stats.winRate.toFixed(2)}%`, inline: true },
-          { name: "Avg Kills", value: stats.avgKills.toFixed(2), inline: true },
-          { name: "Avg Deaths", value: stats.avgDeaths.toFixed(2), inline: true },
-          { name: "Avg Assists", value: stats.avgAssists.toFixed(2), inline: true }
+          { name: "Matches", value: totalMatches.toString(), inline: true },
+          { name: "Wins", value: totalWins.toString(), inline: true },
+          { name: "Win Rate", value: `${((totalWins / totalMatches) * 100).toFixed(2)}%`, inline: true },
+          { name: "Avg Kills", value: (totalKills / totalMatches).toFixed(2), inline: true },
+          { name: "Avg Deaths", value: (totalDeaths / totalMatches).toFixed(2), inline: true },
+          { name: "Avg Assists", value: (totalAssists / totalMatches).toFixed(2), inline: true }
         )
         .setColor(0x3498db)
         .setTimestamp();
 
       return interaction.reply({ embeds: [embed] });
+
     } catch (err) {
       console.error("[STATS CMD] Error:", err);
       return interaction.reply("Failed to fetch your hero stats.");
