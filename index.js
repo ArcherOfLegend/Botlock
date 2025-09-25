@@ -458,7 +458,7 @@ client.on('interactionCreate', async (interaction) => {
       const heroId = getHeroId(heroNameInput);
       if (!heroId) return interaction.reply(`Hero **${heroNameInput}** not found.`);
 
-      const hero = ALIASES.find(h => h.id === heroId);
+      const hero = HEROES.find(h => h.id === heroId);
       if (!hero) return interaction.reply(`Hero **${heroNameInput}** not found.`);
 
       const statsRes = await axios.get('https://api.deadlock-api.com/v1/analytics/hero-stats');
