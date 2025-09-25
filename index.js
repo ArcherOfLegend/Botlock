@@ -6,7 +6,7 @@ import { setChannel, getChannel, getAllChannels } from './broadcastChannels.js';
 import { buildItemEmbed } from "./itemembed.js"; // path to parser
 import { REGISTRY } from "./userRegistry.js";
 import { getLastMatch, getHeroStatsForPlayer, getHeroId, heroName, ALIASES } from "./matches.js"; // NEW
-import { formatItemList } from "./item_utils.js"; // NEW
+import { getItem, dcImageFile } from "./item_utils.js"; // NEW
 
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -253,6 +253,10 @@ client.on('interactionCreate', async (interaction) => {
       const match = await getLastMatch(steamId);
       if (!match) return interaction.reply("No matches found.");
 
+      // Build inventory image
+      const inventoryImage = await dcImageFile(match.items); 
+      const buffer = await inventoryImage.png().toBuffer();
+
       const embed = new EmbedBuilder()
         .setTitle(`Last Match for ${interaction.user.username}`)
         .setDescription(`Match ID: **${match.match_id}**`)
@@ -260,13 +264,16 @@ client.on('interactionCreate', async (interaction) => {
           { name: "Hero", value: match.hero || "Unknown", inline: true },
           { name: "Result", value: match.result || "Unknown", inline: true },
           { name: "K/D/A", value: `${match.kills}/${match.deaths}/${match.assists}`, inline: true },
-          { name: "Duration", value: `${match.duration} min`, inline: true },
-          { name: "Items", value: formatItemList(match.items), inline: false }
+          { name: "Duration", value: `${match.duration} min`, inline: true }
         )
         .setColor(0x2ecc71)
-        .setTimestamp();
+        .setTimestamp()
+        .setImage('attachment://inventory.png'); // attach image to embed
 
-      return interaction.reply({ embeds: [embed] });
+      return interaction.reply({
+        embeds: [embed],
+        files: [{ attachment: buffer, name: 'inventory.png' }]
+      });
     } catch (err) {
       console.error("[LASTMATCH CMD] Error:", err);
       return interaction.reply("Failed to fetch your last match.");
